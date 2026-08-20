@@ -1,0 +1,18 @@
+{
+  "name": "avax-impact",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @avax-impact/sdk && forge build --offline",
+    "test": "npm run test --workspace @avax-impact/sdk && forge test --offline",
+    "test:contracts": "forge test --offline",
+    "test:sdk": "npm run test --workspace @avax-impact/sdk",
+    "format:contracts": "forge fmt --check"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

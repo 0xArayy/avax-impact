@@ -1,0 +1,40 @@
+{
+  "name": "@avax-impact/sdk",
+  "version": "0.1.0",
+  "description": "ERC-8021-compatible transaction attribution SDK for Avalanche",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "bin": {
+    "avax-impact": "./dist/src/cli.js"
+  },
+  "files": [
+    "dist/src",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/test/*.test.js",
+    "cli": "node dist/src/cli.js"
+  },
+  "keywords": [
+    "avalanche",
+    "erc-8021",
+    "attribution",
+    "builder-codes"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3"
+  }
+}
