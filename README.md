@@ -9,6 +9,8 @@ AVAX Impact appends a compact builder code to transaction calldata without chang
 target function ABI. The SDK can recover the attribution from a confirmed transaction,
 while a public registry maps builder codes to payout addresses and metadata.
 
+[Try the live Fuji transaction decoder](https://avax-impact.araycik.chatgpt.site).
+
 ## MVP
 
 - Solidity builder registry with no custody or execution-path dependency.
