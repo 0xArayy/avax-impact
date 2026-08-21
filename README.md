@@ -89,7 +89,7 @@ Network: Avalanche Fuji C-Chain (`43113`). Builder code: `avax-impact`.
 | StrictCalldataDemo | [`0x8545…bf8E`](https://build.avax.network/explorer/fuji/c-chain/address/0x854595b7260f1325f643dd732F926c6B5da3bf8E) |
 
 Attributed demo transaction:
-[`0x33c0…0821`](https://build.avax.network/explorer/fuji/c-chain/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821).
+[`0x33c0…0821`](https://testnet.snowtrace.io/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821).
 
 The SDK decoded the transaction from Fuji RPC and recovered the original `ping(41)`
 calldata. Addresses, transaction hashes, blocks, and verification details are recorded

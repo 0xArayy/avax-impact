@@ -11,6 +11,7 @@ const DEMO_CALLDATA =
 const REGISTRY_ADDRESS = "0x8f13a300f2773EB6fa071B9196f6e16129F2549F";
 const REPOSITORY_URL = "https://github.com/0xArayy/avax-impact";
 const FUJI_EXPLORER_URL = "https://build.avax.network/explorer/fuji/c-chain";
+const FUJI_TRANSACTION_EXPLORER_URL = "https://testnet.snowtrace.io/tx";
 
 type Mode = "transaction" | "calldata";
 type DecodeState =
@@ -242,11 +243,11 @@ export function DecoderDemo() {
                 {state.transactionHash && (
                   <a
                     className="explorer-link"
-                    href={`${FUJI_EXPLORER_URL}/tx/${state.transactionHash}`}
+                    href={`${FUJI_TRANSACTION_EXPLORER_URL}/${state.transactionHash}`}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Open in Avalanche Explorer <span aria-hidden="true">↗</span>
+                    Open in Snowtrace <span aria-hidden="true">↗</span>
                   </a>
                 )}
               </div>

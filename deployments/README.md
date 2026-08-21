@@ -13,7 +13,7 @@ AVAX Impact was deployed to Fuji on 2026-08-20. The public manifest is in
 
 Registered builder code: `avax-impact`  
 Attributed demo transaction:
-[`0x33c0…0821`](https://build.avax.network/explorer/fuji/c-chain/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821)
+[`0x33c0…0821`](https://testnet.snowtrace.io/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821)
 
 The manifest records the source commit, deployment and registration transactions, block
 numbers, builder record, and RPC verification method. It contains no private keys or
