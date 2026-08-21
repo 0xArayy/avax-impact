@@ -24,3 +24,7 @@ jobs:
       - run: forge fmt --check
       - run: forge test -vvv
       - run: bash -n scripts/*.sh
+      - run: npm ci
+        working-directory: demo
+      - run: npm test
+        working-directory: demo

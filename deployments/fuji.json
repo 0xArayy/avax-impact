@@ -3,7 +3,7 @@
   "chainId": 43113,
   "deployer": "0x345B2DEf6C2B14b656DbE57d2De05976E386a2b3",
   "deployedAt": "2026-08-20T20:47:01Z",
-  "sourceCommit": "0c0665124ed8f1edc5372ed48c77a92a941d08be",
+  "sourceCommit": "61cfd157467078012042cd9a0e37648cd3394eb1",
   "contracts": {
     "builderRegistry": "0x8f13a300f2773EB6fa071B9196f6e16129F2549F",
     "attributionDemo": "0x4e0803c679Fff7F3781856b41C2A810E76c47200",
@@ -42,6 +42,12 @@
     "payoutAddress": "0x345B2DEf6C2B14b656DbE57d2De05976E386a2b3",
     "metadataURI": "https://github.com/0xArayy/avax-impact",
     "active": true
+  },
+  "explorer": {
+    "builderRegistry": "https://build.avax.network/explorer/fuji/c-chain/address/0x8f13a300f2773EB6fa071B9196f6e16129F2549F",
+    "attributionDemo": "https://build.avax.network/explorer/fuji/c-chain/address/0x4e0803c679Fff7F3781856b41C2A810E76c47200",
+    "strictCalldataDemo": "https://build.avax.network/explorer/fuji/c-chain/address/0x854595b7260f1325f643dd732F926c6B5da3bf8E",
+    "attributedPing": "https://build.avax.network/explorer/fuji/c-chain/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821"
   },
   "verification": {
     "verifiedAt": "2026-08-20T20:48:20Z",
