@@ -1,0 +1,9 @@
+node_modules/
+packages/*/dist/
+contracts/cache/
+contracts/out/
+/broadcast/
+.env
+.DS_Store
+.gstack/
+*.log
