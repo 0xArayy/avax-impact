@@ -9,7 +9,7 @@ AVAX Impact appends a compact builder code to transaction calldata without chang
 target function ABI. The SDK can recover the attribution from a confirmed transaction,
 while a public registry maps builder codes to payout addresses and metadata.
 
-[Try the live Fuji transaction decoder](https://avax-impact.araycik.chatgpt.site).
+[Try the live Fuji transaction decoder](https://avax-impact.0xarayy.workers.dev).
 
 ## MVP
 
