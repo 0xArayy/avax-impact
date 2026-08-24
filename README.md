@@ -1,5 +1,7 @@
 # AVAX Impact
 
+![AVAX Impact — builder attribution for Avalanche](assets/avax-impact-project-thumbnail.png)
+
 [![CI](https://github.com/0xArayy/avax-impact/actions/workflows/ci.yml/badge.svg)](https://github.com/0xArayy/avax-impact/actions/workflows/ci.yml)
 
 ERC-8021-compatible builder attribution for Avalanche C-Chain and EVM-based
