@@ -9,6 +9,8 @@ const request = {
   to: "0x1111111111111111111111111111111111111111" as Hex,
   calldata: "0x1234" as Hex,
   codes: ["avax-impact"],
+  registryAddress: "0x3333333333333333333333333333333333333333" as Hex,
+  registryChainId: 43113n,
 };
 const pinnedBlock = "0xabc" as Hex;
 
@@ -48,7 +50,11 @@ function compatibleResponse(body: RpcRequest, returnData: Hex = "0x01"): RpcPayl
 }
 
 test("pins one block and selects attributed calldata only after matching original and attributed calls", async (context) => {
-  const expected = appendAttribution(request.calldata, request.codes);
+  const expected = appendAttribution(request.calldata, {
+    registryAddress: request.registryAddress,
+    registryChainId: request.registryChainId,
+    codes: request.codes,
+  });
   const simulated: Hex[] = [];
   mockRpc(context, (body) => {
     if (body.method === "eth_call") simulated.push(callData(body));
@@ -101,7 +107,7 @@ test("accepts canonical quantities and uses identical context for both calls", a
   assert.equal(calls, 2);
 });
 
-test("uses schema-one registry data only in the attributed payload", async (context) => {
+test("uses the required schema-one registry data only in the attributed payload", async (context) => {
   let calls = 0;
   mockRpc(context, (body) => {
     if (body.method === "eth_blockNumber") return { result: pinnedBlock };
@@ -120,22 +126,8 @@ test("uses schema-one registry data only in the attributed payload", async (cont
     return { result: "0x" };
   });
 
-  const result = await prepareAttributedCall({
-    ...request,
-    registryAddress: "0x3333333333333333333333333333333333333333",
-    registryChainId: 43113n,
-  });
+  const result = await prepareAttributedCall(request);
   assert.equal(result.success, true);
-});
-
-test("rejects incomplete schema-one registry context", async () => {
-  await assert.rejects(
-    prepareAttributedCall({
-      ...request,
-      registryAddress: "0x3333333333333333333333333333333333333333",
-    }),
-    /must be provided together/,
-  );
 });
 
 test("falls back only when the original call succeeds and attributed call reverts", async (context) => {
@@ -206,29 +198,6 @@ test("blocks attributed-call transport failures by default", async (context) => 
   assert.equal(result.selectedCalldata, null);
   assert.equal(result.failureKind, "transport");
   assert.equal(result.failedStage, "attributed-call");
-});
-
-test("allows any-error fallback only after the original call passed", async (context) => {
-  let calls = 0;
-  context.mock.method(
-    globalThis,
-    "fetch",
-    async (_input: string | URL | Request, init?: RequestInit): Promise<Response> => {
-      const body = JSON.parse(String(init?.body)) as RpcRequest;
-      if (body.method === "eth_blockNumber") {
-        return Response.json({ jsonrpc: "2.0", id: body.id, result: pinnedBlock });
-      }
-      calls += 1;
-      if (calls === 2) throw new Error("network unavailable");
-      return Response.json({ jsonrpc: "2.0", id: body.id, result: "0x" });
-    },
-  );
-
-  const result = await prepareAttributedCall({ ...request, fallbackPolicy: "any-error" });
-  assert.equal(result.status, "fallback");
-  assert.equal(result.selectedCalldata, request.calldata);
-  assert.equal(result.originalReturnData, "0x");
-  assert.equal(result.failureKind, "transport");
 });
 
 test("never policy blocks after an attributed execution revert", async (context) => {

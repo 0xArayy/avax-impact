@@ -10,10 +10,10 @@ interface Vm {
     function stopBroadcast() external;
 }
 
-contract DeployMVP {
+contract DeployFujiCandidate {
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-    event MVPDeployed(
+    event FujiCandidateDeployed(
         address indexed registry,
         address indexed attributionDemo,
         address indexed strictCalldataDemo
@@ -34,6 +34,8 @@ contract DeployMVP {
         strictCalldataDemo = new StrictCalldataDemo();
         vm.stopBroadcast();
 
-        emit MVPDeployed(address(registry), address(attributionDemo), address(strictCalldataDemo));
+        emit FujiCandidateDeployed(
+            address(registry), address(attributionDemo), address(strictCalldataDemo)
+        );
     }
 }

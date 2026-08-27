@@ -11,7 +11,6 @@ export {
 export {
   ERC_8021_MARKER,
   ATTRIBUTION_FORMAT_VERSION,
-  LEGACY_FORMAT_VERSION,
   MAX_CODE_LENGTH,
   MAX_CODES,
   MAX_JOINED_CODES_LENGTH,
@@ -35,7 +34,6 @@ export {
 export {
   decodeBuilderRecord,
   encodeResolveCall,
-  resolveLegacyBuilder,
   resolveCodeRegistry,
 } from "./registry.js";
 export { JsonRpcClient, JsonRpcError } from "./rpc.js";
@@ -59,8 +57,6 @@ export type {
   DryRunStage,
   FallbackPolicy,
   Hex,
-  LegacyBuilderRecord,
-  LegacyBuilderResolution,
   ResolveBuilderRequest,
   RpcClientOptions,
   RpcErrorKind,

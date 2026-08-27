@@ -7,11 +7,13 @@ import { join } from "node:path";
 
 import {
   analyzeTransaction,
-  appendAttribution,
   JsonRpcClient,
   JsonRpcError,
-  resolveLegacyBuilder,
 } from "../packages/sdk/dist/src/index.js";
+import {
+  appendLegacyAttribution,
+  resolveLegacyBuilder,
+} from "../packages/sdk/dist/src/legacy.js";
 
 const rpcUrl = process.env.FUJI_RPC_URL ?? "https://api.avax-test.network/ext/bc/C/rpc";
 const manifest = JSON.parse(await readFile(new URL("../deployments/fuji.json", import.meta.url)));
@@ -145,7 +147,7 @@ await check("strict-calldata fallback proof", async () => {
   );
   equal(originalResult, "0x", "strictPing(41) original call result");
 
-  const attributedCalldata = appendAttribution(originalCalldata, [manifest.builder.code]);
+  const attributedCalldata = appendLegacyAttribution(originalCalldata, [manifest.builder.code]);
   try {
     await client.request(
       "eth_call",

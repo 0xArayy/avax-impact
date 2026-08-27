@@ -6,7 +6,7 @@ import { describeChainContext, formatBlockNumber, validateCalldata, validateTran
 import {
   inspectFujiTransaction,
   inspectRawCalldata,
-  resolveLegacyCodes,
+  resolveHistoricalCodes,
   SAMPLE_CALLDATA,
   SAMPLE_TRANSACTION,
   type InspectResult,
@@ -61,7 +61,7 @@ export function InspectPanel() {
 
       if (result.analysis.status === "declared" && result.analysis.declaration.schemaId === 0) {
         setLegacyLoading(true);
-        const resolutions = await resolveLegacyCodes(result.analysis.declaration, controller.signal);
+        const resolutions = await resolveHistoricalCodes(result.analysis.declaration, controller.signal);
         if (!controller.signal.aborted) setLegacyResults(resolutions);
       }
     } catch (error) {

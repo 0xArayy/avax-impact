@@ -22,6 +22,7 @@ require_nonzero_address() {
 for variable in \
   FUJI_RPC_URL \
   DEPLOYER_PRIVATE_KEY \
+  REGISTRY_ADDRESS \
   ATTRIBUTION_DEMO_ADDRESS \
   BUILDER_CODE
 do
@@ -29,6 +30,7 @@ do
 done
 
 require_nonzero_address ATTRIBUTION_DEMO_ADDRESS
+require_nonzero_address REGISTRY_ADDRESS
 
 expected_chain_id="${EXPECTED_CHAIN_ID:-43113}"
 actual_chain_id="$(cast chain-id --rpc-url "$FUJI_RPC_URL")"
@@ -45,16 +47,22 @@ fi
 npm run build --workspace @avax-impact/sdk >/dev/null
 
 base_calldata="$(cast calldata 'ping(uint256)' "${PING_VALUE:-41}")"
-attributed_calldata="$({
-  node packages/sdk/dist/src/cli.js encode \
-    --calldata "$base_calldata" \
-    --code "$BUILDER_CODE"
-} | jq -r '.calldata')"
+preflight_json="$(node packages/sdk/dist/src/cli.js preflight \
+  --rpc "$FUJI_RPC_URL" \
+  --to "$ATTRIBUTION_DEMO_ADDRESS" \
+  --calldata "$base_calldata" \
+  --code "$BUILDER_CODE" \
+  --registry "$REGISTRY_ADDRESS" \
+  --registry-chain-id "$actual_chain_id" \
+  --fallback-policy never)"
 
-# Simulate the exact attributed payload before asking the wallet to sign it.
-cast call "$ATTRIBUTION_DEMO_ADDRESS" "$attributed_calldata" \
-  --gas-limit "${DEMO_GAS_LIMIT:-100000}" \
-  --rpc-url "$FUJI_RPC_URL" >/dev/null
+if [[ "$(jq -r '.status' <<<"$preflight_json")" != "attributed" ]]; then
+  echo "Refusing to sign: schema 1 preflight did not establish matching return data." >&2
+  jq '{status, failureKind, failedStage, error, blockTag}' <<<"$preflight_json" >&2
+  exit 1
+fi
+
+attributed_calldata="$(jq -er '.selectedCalldata' <<<"$preflight_json")"
 
 cast send "$ATTRIBUTION_DEMO_ADDRESS" "$attributed_calldata" \
   --gas-limit "${DEMO_GAS_LIMIT:-100000}" \

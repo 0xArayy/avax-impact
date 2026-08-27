@@ -1,4 +1,4 @@
-import { encodeAttribution, encodeAttributionV1 } from "./codec.js";
+import { encodeAttribution } from "./codec.js";
 import type {
   DataSuffixCapability,
   DataSuffixCapabilityRequest,
@@ -11,15 +11,10 @@ import type {
 export function createDataSuffixCapability(
   request: DataSuffixCapabilityRequest,
 ): DataSuffixCapability {
-  if ((request.registryAddress === undefined) !== (request.registryChainId === undefined)) {
-    throw new Error("registryAddress and registryChainId must be provided together");
-  }
-  const value = request.registryAddress === undefined || request.registryChainId === undefined
-    ? encodeAttribution(request.codes)
-    : encodeAttributionV1({
-        registryAddress: request.registryAddress,
-        registryChainId: request.registryChainId,
-        codes: request.codes,
-      });
+  const value = encodeAttribution({
+    registryAddress: request.registryAddress,
+    registryChainId: request.registryChainId,
+    codes: request.codes,
+  });
   return { dataSuffix: { value, optional: request.optional ?? false } };
 }

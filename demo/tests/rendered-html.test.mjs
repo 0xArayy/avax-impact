@@ -1,69 +1,39 @@
 import assert from "node:assert/strict";
+import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
-async function loadWorker() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  return (await import(workerUrl.href)).default;
-}
+test("builds a stable static Cloudflare application shell", async () => {
+  const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
+  assert.match(html, /<title>AVAX Impact — Builder Attribution SDK<\/title>/i);
+  assert.match(html, /<div id="root"><\/div>/i);
+  assert.match(html, /<script[^>]+type="module"[^>]+src="\/assets\/[^"]+\.js"/i);
+  assert.doesNotMatch(html, /_vinext|__next|react-server-dom/i);
 
-async function render() {
-  const worker = await loadWorker();
-
-  return worker.fetch(
-    new Request("http://localhost/", {
-      headers: { accept: "text/html" },
-    }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
-  );
-}
-
-test("renders the AVAX Impact attribution readiness workbench", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
-
-  const html = await response.text();
-  assert.match(html, /<title>AVAX Impact — Attribution Readiness Workbench<\/title>/i);
-  assert.match(html, /Know what the transaction/);
-  assert.match(html, /Read the attribution trail/);
-  assert.match(html, /Simulate before any signature/);
-  assert.match(html, /Legacy wire prototype/i);
-  assert.match(html, /Metadata, never authorization/i);
-  assert.match(html, /zero private keys/i);
-  assert.doesNotMatch(html, /connect wallet|private key input/i);
-  assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/);
+  const assets = await readdir(new URL("../dist/assets/", import.meta.url));
+  assert.ok(assets.some((name) => name.endsWith(".js")));
+  assert.ok(assets.some((name) => name.endsWith(".css")));
 });
 
-test("production image route does not require an unused Cloudflare Images binding", async () => {
-  const worker = await loadWorker();
-  const response = await worker.fetch(
-    new Request(
-      "http://localhost/_vinext/image?url=%2Ffavicon.svg&w=640&q=75",
-    ),
-    {
-      ASSETS: {
-        fetch: async () =>
-          new Response("<svg/>", {
-            status: 200,
-            headers: { "content-type": "image/svg+xml" },
-          }),
-      },
-    },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
-  );
+test("keeps schema 1 as the visible default and isolates historical evidence", async () => {
+  const source = await readFile(new URL("../app/DecoderDemo.tsx", import.meta.url), "utf8");
+  assert.match(source, /Default format/);
+  assert.match(source, /Schema 1 · pinned ERC-8021 draft/);
+  assert.doesNotMatch(source, /Schema 0 status|Legacy wire prototype|Fuji prototype/);
 
-  assert.equal(response.status, 302);
-  assert.equal(response.headers.get("location"), "http://localhost/favicon.svg");
+  const historical = await readFile(new URL("../app/LegacyResolution.tsx", import.meta.url), "utf8");
+  assert.match(historical, /<details/);
+  assert.match(historical, /Historical schema 0 evidence/);
+});
+
+test("uses stable Vite and static Cloudflare Assets without beta runtime packages", async () => {
+  const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+  const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+  assert.equal(dependencies.vinext, undefined);
+  assert.equal(dependencies["@vinext/cloudflare"], undefined);
+  assert.equal(dependencies["react-server-dom-webpack"], undefined);
+
+  const wrangler = await readFile(new URL("../wrangler.jsonc", import.meta.url), "utf8");
+  assert.match(wrangler, /"directory": "\.\/dist"/);
+  assert.match(wrangler, /"not_found_handling": "single-page-application"/);
+  assert.doesNotMatch(wrangler, /"main"/);
 });

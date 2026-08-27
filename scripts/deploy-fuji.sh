@@ -19,9 +19,9 @@ if [[ "$actual_chain_id" != "$expected_chain_id" ]]; then
   exit 1
 fi
 
-forge script contracts/script/DeployMVP.s.sol:DeployMVP \
+forge script contracts/script/DeployFujiCandidate.s.sol:DeployFujiCandidate \
   --rpc-url "$FUJI_RPC_URL" \
   --broadcast \
   --slow
 
-echo "Deployment complete. Copy the three contract addresses from the receipt into .env."
+echo "Fuji candidate deployment complete. Copy the three contract addresses from the receipt into .env."

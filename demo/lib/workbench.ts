@@ -4,20 +4,23 @@ import {
   detectAttribution,
   encodeResolveCall,
   prepareAttributedCall,
-  resolveLegacyBuilder,
   type AttributionAnalysis,
   type AttributionResult,
   type DryRunResult,
   type Hex,
-  type LegacyBuilderResolution,
   type RpcTransaction,
 } from "@avax-impact/sdk";
+import {
+  resolveLegacyBuilder,
+  type LegacyBuilderResolution,
+} from "@avax-impact/sdk/legacy";
 import { SAMPLE_STRICT_CALLDATA } from "@/lib/presentation.mjs";
 
 export const FUJI = {
   chainId: 43_113,
   rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc",
   registryAddress: "0x8f13a300f2773EB6fa071B9196f6e16129F2549F" as Hex,
+  historicalRegistryAddress: "0x8f13a300f2773EB6fa071B9196f6e16129F2549F" as Hex,
   strictCalldataDemoAddress: "0x854595b7260f1325f643dd732F926c6B5da3bf8E" as Hex,
   explorerUrl: "https://build.avax.network/explorer/fuji/c-chain",
 } as const;
@@ -78,7 +81,7 @@ export function inspectRawCalldata(calldata: Hex): InspectResult {
   return { source: "local-calldata", analysis };
 }
 
-export async function resolveLegacyCodes(
+export async function resolveHistoricalCodes(
   declaration: AttributionResult,
   signal?: AbortSignal,
 ): Promise<readonly LegacyResolutionResult[]> {
@@ -88,7 +91,7 @@ export async function resolveLegacyCodes(
       try {
         const resolution = await resolveLegacyBuilder({
           rpcUrl: FUJI.rpcUrl,
-          registryAddress: FUJI.registryAddress,
+          registryAddress: FUJI.historicalRegistryAddress,
           code,
           timeoutMs: 12_000,
           signal,
@@ -116,6 +119,8 @@ export function preflightFujiCall(input: PreflightInput): Promise<DryRunResult> 
     to: input.to,
     calldata: input.calldata,
     codes: input.codes,
+    registryAddress: FUJI.registryAddress,
+    registryChainId: BigInt(FUJI.chainId),
     from: input.from,
     value: input.value,
     timeoutMs: 12_000,
