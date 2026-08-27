@@ -3,6 +3,9 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
 
 permissions:
   contents: read
@@ -20,11 +23,35 @@ jobs:
         with:
           version: v1.2.3
       - run: npm ci
+      - run: npm audit --audit-level=high
       - run: npm run test:sdk
       - run: forge fmt --check
       - run: forge test -vvv
       - run: bash -n scripts/*.sh
       - run: npm ci
         working-directory: demo
+      - run: npm audit --audit-level=high
+        working-directory: demo
       - run: npm test
         working-directory: demo
+      - run: npm run lint
+        working-directory: demo
+
+  verify-fuji:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.2.3
+      - run: npm ci
+      - name: Fetch deployment source commit
+        run: git fetch origin "$(jq -r .sourceCommit deployments/fuji.json)"
+      - run: npm run verify:fuji
