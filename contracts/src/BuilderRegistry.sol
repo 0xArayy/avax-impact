@@ -4,7 +4,17 @@ pragma solidity ^0.8.24;
 /// @title BuilderRegistry
 /// @notice Maps human-readable builder codes to their owner, payout address, and metadata.
 /// @dev The registry does not authorize attributed transactions and never holds user funds.
-contract BuilderRegistry {
+interface ICodeRegistry {
+    function payoutAddress(string calldata code) external view returns (address);
+
+    function codeURI(string calldata code) external view returns (string memory);
+
+    function isValidCode(string calldata code) external view returns (bool);
+
+    function isRegistered(string calldata code) external view returns (bool);
+}
+
+contract BuilderRegistry is ICodeRegistry {
     uint256 public constant MIN_CODE_LENGTH = 3;
     uint256 public constant MAX_CODE_LENGTH = 32;
     uint256 public constant MAX_METADATA_URI_LENGTH = 512;
@@ -47,11 +57,9 @@ contract BuilderRegistry {
     mapping(bytes32 codeHash => BuilderRecord record) private records;
 
     /// @notice Registers a unique builder code for the caller.
-    function register(string calldata code, address payoutAddress, string calldata metadataURI)
-        external
-    {
+    function register(string calldata code, address payout, string calldata metadataURI) external {
         _validateCode(code);
-        _validatePayoutAddress(payoutAddress);
+        _validatePayoutAddress(payout);
         _validateMetadataURI(metadataURI);
 
         bytes32 hash = codeHash(code);
@@ -60,13 +68,13 @@ contract BuilderRegistry {
         records[hash] = BuilderRecord({
             code: code,
             owner: msg.sender,
-            payoutAddress: payoutAddress,
+            payoutAddress: payout,
             metadataURI: metadataURI,
             registeredAt: uint64(block.timestamp),
             active: true
         });
 
-        emit BuilderRegistered(hash, code, msg.sender, payoutAddress, metadataURI);
+        emit BuilderRegistered(hash, code, msg.sender, payout, metadataURI);
     }
 
     /// @notice Updates the payout address associated with an active builder code.
@@ -116,8 +124,30 @@ contract BuilderRegistry {
         return record;
     }
 
-    /// @notice Returns true only when the code exists and is active.
-    function isRegistered(string calldata code) external view returns (bool) {
+    /// @notice Returns the payout address for a registered, active code.
+    /// @dev Invalid, unknown, and inactive codes revert with distinct errors.
+    function payoutAddress(string calldata code) external view override returns (address) {
+        _validateCode(code);
+        return _activeRecord(codeHash(code)).payoutAddress;
+    }
+
+    /// @notice Returns the metadata URI for a registered, active code.
+    /// @dev This is the ERC-8021 draft `codeURI` view over the local `metadataURI` field.
+    function codeURI(string calldata code) external view override returns (string memory) {
+        _validateCode(code);
+        return _activeRecord(codeHash(code)).metadataURI;
+    }
+
+    /// @notice Returns whether a code satisfies the registry's code-format rules.
+    /// @dev Unlike `validateBuilderCode`, this canonical consumer view never reverts.
+    function isValidCode(string calldata code) external pure override returns (bool) {
+        return _isValidCode(code);
+    }
+
+    /// @notice Returns true only when a well-formed code exists and is active.
+    /// @dev Invalid, unknown, and inactive codes all return false without reverting.
+    function isRegistered(string calldata code) external view override returns (bool) {
+        if (!_isValidCode(code)) return false;
         BuilderRecord storage record = records[codeHash(code)];
         return record.owner != address(0) && record.active;
     }
@@ -137,10 +167,34 @@ contract BuilderRegistry {
         view
         returns (BuilderRecord storage record)
     {
+        record = _activeRecord(hash);
+        if (record.owner != msg.sender) revert NotCodeOwner(hash, msg.sender);
+    }
+
+    function _activeRecord(bytes32 hash) private view returns (BuilderRecord storage record) {
         record = records[hash];
         if (record.owner == address(0)) revert CodeNotRegistered(hash);
         if (!record.active) revert CodeInactive(hash);
-        if (record.owner != msg.sender) revert NotCodeOwner(hash, msg.sender);
+    }
+
+    function _isValidCode(string calldata code) private pure returns (bool) {
+        bytes calldata value = bytes(code);
+        uint256 length = value.length;
+        if (length < MIN_CODE_LENGTH || length > MAX_CODE_LENGTH) return false;
+        if (value[0] == bytes1("-") || value[length - 1] == bytes1("-")) return false;
+
+        bool previousWasHyphen;
+        for (uint256 index = 0; index < length; ++index) {
+            bytes1 character = value[index];
+            bool isLowercaseLetter = character >= bytes1("a") && character <= bytes1("z");
+            bool isNumber = character >= bytes1("0") && character <= bytes1("9");
+            bool isHyphen = character == bytes1("-");
+            if (!isLowercaseLetter && !isNumber && !isHyphen) return false;
+            if (isHyphen && previousWasHyphen) return false;
+            previousWasHyphen = isHyphen;
+        }
+
+        return true;
     }
 
     function _validateCode(string calldata code) private pure {
@@ -168,8 +222,8 @@ contract BuilderRegistry {
         }
     }
 
-    function _validatePayoutAddress(address payoutAddress) private pure {
-        if (payoutAddress == address(0)) revert ZeroAddress();
+    function _validatePayoutAddress(address payout) private pure {
+        if (payout == address(0)) revert ZeroAddress();
     }
 
     function _validateMetadataURI(string calldata metadataURI) private pure {

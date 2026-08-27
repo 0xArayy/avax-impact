@@ -3,9 +3,12 @@ import test from "node:test";
 
 import {
   appendAttribution,
+  appendAttributionV1,
+  CONFORMANCE_VECTORS,
   decodeAttribution,
   detectAttribution,
   encodeAttribution,
+  encodeAttributionV1,
   ERC_8021_MARKER,
   stripAttribution,
   tryDecodeAttribution,
@@ -40,6 +43,69 @@ test("round-trips multiple builder codes", () => {
   assert.deepEqual(decodeAttribution(attributed).codes, ["wallet", "avax-impact"]);
 });
 
+test("matches and round-trips the pinned ERC-8021 schema-one example", () => {
+  const registryAddress = "0xcccccccccccccccccccccccccccccccccccccccc" as Hex;
+  const suffix = encodeAttributionV1({
+    registryAddress,
+    registryChainId: 8453n,
+    codes: ["baseapp", "morpho"],
+  });
+  assert.equal(
+    suffix,
+    `0x${"cc".repeat(20)}210502626173656170702c6d6f7270686f0e01${ERC_8021_MARKER.slice(2)}`,
+  );
+
+  const decoded = decodeAttribution(
+    appendAttributionV1("0xdddddddd", {
+      registryAddress,
+      registryChainId: 8453n,
+      codes: ["baseapp", "morpho"],
+    }),
+  );
+  assert.equal(decoded.schemaId, 1);
+  assert.equal(decoded.originalCalldata, "0xdddddddd");
+  assert.deepEqual(decoded.codes, ["baseapp", "morpho"]);
+  assert.equal(decoded.registryAddress, registryAddress);
+  assert.equal(decoded.registryChainId, 8453n);
+});
+
+test("validates schema-one registry context", () => {
+  const base = {
+    registryAddress: "0x1111111111111111111111111111111111111111" as Hex,
+    registryChainId: 43113n,
+    codes: ["avax-impact"],
+  };
+  assert.throws(
+    () => encodeAttributionV1({ ...base, registryAddress: `0x${"00".repeat(20)}` }),
+    /zero address/,
+  );
+  assert.throws(() => encodeAttributionV1({ ...base, registryChainId: 0n }), /positive/);
+  assert.throws(() => encodeAttributionV1({ ...base, registryChainId: 1n << 2040n }), /255 bytes/);
+});
+
+test("passes every published conformance vector", () => {
+  for (const vector of CONFORMANCE_VECTORS) {
+    if (vector.outcome.status === "unattributed") {
+      assert.equal(detectAttribution(vector.calldata), false, vector.name);
+      continue;
+    }
+    if (vector.outcome.status === "malformed") {
+      assert.throws(
+        () => decodeAttribution(vector.calldata),
+        new RegExp(vector.outcome.errorIncludes),
+        vector.name,
+      );
+      continue;
+    }
+    const decoded = decodeAttribution(vector.calldata);
+    assert.equal(decoded.schemaId, vector.outcome.schemaId, vector.name);
+    assert.deepEqual(decoded.codes, vector.outcome.codes, vector.name);
+    assert.equal(decoded.originalCalldata, vector.outcome.originalCalldata, vector.name);
+    assert.equal(decoded.registryAddress, vector.outcome.registryAddress, vector.name);
+    assert.equal(decoded.registryChainId, vector.outcome.registryChainId, vector.name);
+  }
+});
+
 test("detects only calldata ending in the marker", () => {
   assert.equal(detectAttribution(normalCalldata), false);
   assert.equal(detectAttribution(appendAttribution(normalCalldata, ["avax-impact"])), true);
@@ -51,19 +117,22 @@ test("returns null for unattributed or malformed calldata", () => {
   assert.equal(tryDecodeAttribution(malformed), null);
 });
 
-test("rejects invalid builder codes", () => {
+test("separates registry policy from ERC-8021 wire-code validity", () => {
   assert.equal(validateBuilderCode("avax-impact").valid, true);
   assert.equal(validateBuilderCode("UPPERCASE").valid, false);
   assert.equal(validateBuilderCode("double--hyphen").valid, false);
-  assert.throws(() => encodeAttribution(["ab"]), /between 3 and 32 bytes/);
-  assert.throws(() => encodeAttribution(["same", "same"]), /duplicates/);
+  assert.deepEqual(decodeAttribution(appendAttribution("0x", ["A", "A"])).codes, ["A", "A"]);
+  assert.throws(() => encodeAttribution([""]), /must not be empty/);
+  assert.throws(() => encodeAttribution(["has,comma"]), /must not contain commas/);
+  assert.throws(() => encodeAttribution(["avalanche-雪"]), /7-bit ASCII/);
+  assert.throws(() => encodeAttribution(["a".repeat(256)]), /must not exceed 255 bytes/);
 });
 
 test("rejects unsupported schema IDs", () => {
   const valid = encodeAttribution(["avax-impact"]);
   const schemaIdOffset = valid.length - ERC_8021_MARKER.length;
-  const unsupported = `${valid.slice(0, schemaIdOffset)}01${valid.slice(schemaIdOffset + 2)}` as Hex;
-  assert.throws(() => decodeAttribution(unsupported), /unsupported attribution schema: 1/);
+  const unsupported = `${valid.slice(0, schemaIdOffset)}02${valid.slice(schemaIdOffset + 2)}` as Hex;
+  assert.throws(() => decodeAttribution(unsupported), /unsupported attribution schema: 2/);
 });
 
 test("rejects invalid hex input", () => {

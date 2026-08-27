@@ -3,11 +3,33 @@
   "chainId": 43113,
   "deployer": "0x345B2DEf6C2B14b656DbE57d2De05976E386a2b3",
   "deployedAt": "2026-08-20T20:47:01Z",
-  "sourceCommit": "61cfd157467078012042cd9a0e37648cd3394eb1",
+  "sourceCommit": "0c0665124ed8f1edc5372ed48c77a92a941d08be",
+  "sourceUrl": "https://github.com/0xArayy/avax-impact/commit/0c0665124ed8f1edc5372ed48c77a92a941d08be",
+  "sourceCommittedAt": "2026-08-20T20:45:41Z",
+  "compiler": {
+    "version": "0.8.24",
+    "optimizer": true,
+    "optimizerRuns": 200,
+    "evmVersion": "cancun"
+  },
   "contracts": {
     "builderRegistry": "0x8f13a300f2773EB6fa071B9196f6e16129F2549F",
     "attributionDemo": "0x4e0803c679Fff7F3781856b41C2A810E76c47200",
     "strictCalldataDemo": "0x854595b7260f1325f643dd732F926c6B5da3bf8E"
+  },
+  "runtimeBytecode": {
+    "builderRegistry": {
+      "bytes": 4904,
+      "keccak256": "0xb680f943837531dd9a72e1d3c49376e495becac9463f1293d8b4d139210603b2"
+    },
+    "attributionDemo": {
+      "bytes": 264,
+      "keccak256": "0x8e3a4de75d1d2acaefb1c4c8fb6cc5df7e17fab62a495face409458bccdb35f3"
+    },
+    "strictCalldataDemo": {
+      "bytes": 229,
+      "keccak256": "0x8f0f579f8900376a2f2e3cc1a16ec2927e5e067d8836edb4f4a6b270d0795049"
+    }
   },
   "transactions": {
     "deployments": [
@@ -51,6 +73,10 @@
   },
   "verification": {
     "verifiedAt": "2026-08-20T20:48:20Z",
-    "method": "Avalanche Fuji JSON-RPC bytecode, registry resolve, receipt, and calldata decode checks"
+    "reverifiedAt": "2026-08-27T08:05:43Z",
+    "command": "npm run verify:fuji",
+    "method": "Source commit availability, exact compiler settings, Avalanche Fuji JSON-RPC runtime bytecode hashes, receipts, legacy registry resolve, calldata decode, and strict-calldata original-success/attributed-revert checks",
+    "registryConformance": "legacy AVAX Impact API; the deployed registry predates the pinned ICodeRegistry ABI",
+    "attributionFormat": "ERC-8021 schema-0 wire-format prototype; no canonical Avalanche schema-0 registry is claimed"
   }
 }

@@ -1,111 +1,151 @@
-# Fuji deployment and demo runbook
+# Fuji verification and deployment runbook
 
-This runbook reproduces the public Fuji deployment: a builder registry, an attributed
-transaction, and decoder output that recovers the original calldata.
+This runbook separates two different artifacts that must not be conflated:
 
-## 1. Prepare a dedicated account
+1. the historical schema 0 AVAX Impact prototype already deployed on Fuji; and
+2. a future schema 1 deployment using the pinned `ICodeRegistry` ABI.
 
-Use a new, low-value Fuji-only key. Fund it with test AVAX. Never reuse a mainnet key and
-never commit `.env`, shell history containing the key, or an authenticated RPC URL.
+## Verify the historical deployment
+
+The public addresses and transactions in `deployments/fuji.json` were deployed from
+source commit
+[`0c0665124ed8f1edc5372ed48c77a92a941d08be`](https://github.com/0xArayy/avax-impact/commit/0c0665124ed8f1edc5372ed48c77a92a941d08be).
+That source is now present in Git history and predates the recorded deployment.
+
+Run:
+
+```bash
+npm install
+npm run verify:fuji
+```
+
+`verify:fuji` first builds the current SDK/contracts, then the read-only verifier:
+
+1. confirms the recorded source commit exists;
+2. archives and rebuilds that exact commit with the recorded compiler settings;
+3. compares rebuilt and live Fuji runtime bytecode lengths and hashes;
+4. checks the chain ID and all deployment, registration, and demo receipts;
+5. resolves `avax-impact` through the deployed legacy registry ABI;
+6. fetches the attributed transaction and verifies target, schema 0 code, and original
+   `ping(41)` calldata.
+
+The command requires `git`, Node.js 22+, npm, Foundry/cast, `tar`, and outbound Fuji RPC
+access. Set `FUJI_RPC_URL` to override the public endpoint. A mismatch or unreachable RPC
+is a failed live verification, not permission to rely on the manifest alone.
+
+The historical result is deliberately narrow: it validates a schema 0 wire-format
+prototype and AVAX Impact's legacy registry. It does not validate a canonical or
+interoperable ERC-8021 registry.
+
+## Current historical addresses
+
+| Contract | Address |
+| --- | --- |
+| Legacy `BuilderRegistry` | `0x8f13a300f2773EB6fa071B9196f6e16129F2549F` |
+| `AttributionDemo` | `0x4e0803c679Fff7F3781856b41C2A810E76c47200` |
+| `StrictCalldataDemo` | `0x854595b7260f1325f643dd732F926c6B5da3bf8E` |
+
+Attributed transaction:
+`0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821`.
+
+## Rehearse the current contracts locally
+
+Before any new Fuji broadcast:
+
+```bash
+npm install
+npm test
+forge fmt --check
+bash -n scripts/*.sh
+```
+
+The current local code differs from the historical deploy. It adds schema 1 support in
+the SDK and the pinned `ICodeRegistry` read ABI in `BuilderRegistry`. A successful local
+test does not upgrade the old Fuji address.
+
+## Prepare a dedicated Fuji account
+
+Use a new, low-value Fuji-only key funded with test AVAX. Never reuse a mainnet key or
+commit `.env`, a private key, or an authenticated RPC URL.
 
 ```bash
 cp .env.example .env
-```
-
-Set `DEPLOYER_PRIVATE_KEY`, `PAYOUT_ADDRESS`, and any custom RPC URL in `.env`, then load
-the variables:
-
-```bash
 set -a
 source .env
 set +a
 ```
 
-## 2. Verify locally
+Set `DEPLOYER_PRIVATE_KEY`, `PAYOUT_ADDRESS`, `METADATA_URI`, `BUILDER_CODE`, and
+`FUJI_RPC_URL`. The shell scripts refuse a chain ID other than `43113` unless
+`EXPECTED_CHAIN_ID` is explicitly changed for a local Anvil rehearsal.
 
-```bash
-npm install
-npm test
-bash -n scripts/*.sh
-```
-
-## 3. Deploy contracts
+## Deploy the current conformant registry candidate
 
 ```bash
 ./scripts/deploy-fuji.sh
 ```
 
-The Foundry receipt contains three addresses:
+Record the new `BuilderRegistry`, `AttributionDemo`, and `StrictCalldataDemo` addresses,
+then set `REGISTRY_ADDRESS` and `ATTRIBUTION_DEMO_ADDRESS`.
 
-- `BuilderRegistry`;
-- `AttributionDemo`, which accepts trailing attribution;
-- `StrictCalldataDemo`, which deliberately rejects it.
-
-Copy them to the corresponding `.env` fields and export the updated values again.
-All three broadcast scripts refuse to run unless the RPC reports Fuji chain ID `43113`.
-For a local Anvil rehearsal only, set `EXPECTED_CHAIN_ID=31337` explicitly.
-
-## 4. Register `avax-impact`
+Register the code:
 
 ```bash
 ./scripts/register-builder.sh
-
-cast call "$REGISTRY_ADDRESS" \
-  'isRegistered(string)(bool)' "$BUILDER_CODE" \
-  --rpc-url "$FUJI_RPC_URL"
 ```
 
-Expected result: `true`.
+Verify every pinned read function at the new address:
 
-## 5. Send an attributed call
-
-```bash
-./scripts/send-attributed-ping.sh
+```text
+payoutAddress(string)
+codeURI(string)
+isValidCode(string)
+isRegistered(string)
 ```
 
-The script:
+Also test invalid, unknown, and inactive-code behavior. A successful legacy `resolve`
+call alone is not sufficient evidence of `ICodeRegistry` conformance.
 
-1. ABI-encodes `ping(41)`;
-2. appends the configured builder code with the SDK;
-3. simulates the exact attributed payload via `eth_call`;
-4. broadcasts only after the simulation succeeds.
+## Produce a schema 1 Fuji proof
 
-The demo uses an explicit 100,000 gas limit because the public Fuji RPC can reject
-`eth_call` requests whose client-provided default exceeds the block gas limit.
+Use `appendAttributionV1` or `prepareAttributedCall` with both the new registry address
+and `registryChainId: 43113n`. Provide the real sender and value during simulation. The
+confirmed transaction must decode to:
 
-Save the printed transaction hash and decode it directly from Fuji:
+- `schemaId: 1`;
+- the exact new registry address;
+- registry chain ID `43113`;
+- expected builder codes;
+- unchanged original target calldata.
 
-```bash
-node packages/sdk/dist/src/cli.js decode-tx \
-  --rpc "$FUJI_RPC_URL" \
-  --hash 0xYOUR_TRANSACTION_HASH
-```
+The existing `scripts/send-attributed-ping.sh` currently emits legacy schema 0 through
+the CLI. It can reproduce the old prototype path but is not evidence for this schema 1
+milestone until it is upgraded or a separate schema 1 sender is added.
 
-The output must show `avax-impact` and the original 36-byte `ping(uint256)` calldata.
+## Record new deployment evidence
 
-## 6. Record reproducible evidence
+Do not overwrite the historical record without preserving its identity. A new manifest
+or versioned manifest should include:
 
-Create `deployments/fuji.json` containing only public information:
+- exact reachable source commit and immutable source URL;
+- UTC commit and deployment timestamps;
+- Solidity version, optimizer settings, runs, and EVM version;
+- every deployment/registration/demo transaction hash, receipt status, and block;
+- runtime bytecode length and Keccak hash for each contract;
+- new registry address and explicit `ICodeRegistry` conformance status;
+- a confirmed schema 1 transaction and decoded registry context;
+- verifier version/command and last successful verification time.
 
-```json
-{
-  "chainId": 43113,
-  "deployer": "0x...",
-  "blockNumber": 0,
-  "deployedAt": "2026-08-20T00:00:00Z",
-  "commit": "...",
-  "contracts": {
-    "builderRegistry": "0x...",
-    "attributionDemo": "0x...",
-    "strictCalldataDemo": "0x..."
-  },
-  "transactions": {
-    "deployment": ["0x..."],
-    "registration": "0x...",
-    "attributedPing": "0x..."
-  }
-}
-```
+Before publishing, run a clean read-only verifier that rebuilds the new source and
+checks live bytecode, receipts, registry calls, and the schema 1 transaction. Explorer
+links are useful navigation, not a substitute for deterministic checks.
 
-Before publishing, verify all addresses and hashes against an Avalanche explorer and make
-sure the file contains no credentials.
+## Operational limits
+
+- The contracts are unaudited.
+- First-come registration permits squatting/front-running.
+- Builder codes remain public and spoofable even with schema 1.
+- Shell scripts pass a Fuji private key to Foundry/cast; prefer a keystore or hardware
+  signer before any production operation.
+- No new conformant Fuji registry or schema 1 proof is claimed until its manifest and
+  verifier evidence are committed publicly.

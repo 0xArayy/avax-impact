@@ -1,15 +1,7 @@
-import { appendAttribution } from "./codec.js";
+import { appendAttribution, appendAttributionV1 } from "./codec.js";
 import { assertAddress, assertHex, assertRpcQuantity } from "./hex.js";
+import { JsonRpcClient } from "./rpc.js";
 import type { DryRunRequest, DryRunResult, Hex } from "./types.js";
-
-interface JsonRpcResponse {
-  readonly result?: string;
-  readonly error?: {
-    readonly code?: number;
-    readonly message?: string;
-    readonly data?: unknown;
-  };
-}
 
 export async function prepareAttributedCall(request: DryRunRequest): Promise<DryRunResult> {
   assertAddress(request.to, "to");
@@ -17,7 +9,18 @@ export async function prepareAttributedCall(request: DryRunRequest): Promise<Dry
   if (request.from !== undefined) assertAddress(request.from, "from");
   if (request.value !== undefined) assertRpcQuantity(request.value, "value");
 
-  const attributedCalldata = appendAttribution(request.calldata, request.codes);
+  if ((request.registryAddress === undefined) !== (request.registryChainId === undefined)) {
+    throw new Error("registryAddress and registryChainId must be provided together");
+  }
+
+  const attributedCalldata =
+    request.registryAddress === undefined || request.registryChainId === undefined
+      ? appendAttribution(request.calldata, request.codes)
+      : appendAttributionV1(request.calldata, {
+          registryAddress: request.registryAddress,
+          registryChainId: request.registryChainId,
+          codes: request.codes,
+        });
   const transaction: Record<string, Hex> = {
     to: request.to,
     data: attributedCalldata,
@@ -26,44 +29,25 @@ export async function prepareAttributedCall(request: DryRunRequest): Promise<Dry
   if (request.value !== undefined) transaction.value = request.value;
 
   try {
-    const response = await fetch(request.rpcUrl, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "eth_call",
-        params: [transaction, "latest"],
-      }),
+    const client = new JsonRpcClient({
+      url: request.rpcUrl,
+      timeoutMs: request.timeoutMs,
     });
-
-    if (!response.ok) {
-      return fallbackResult(
-        request.calldata,
-        attributedCalldata,
-        `RPC returned HTTP ${response.status}`,
-      );
-    }
-
-    const payload = (await response.json()) as JsonRpcResponse;
-    if (payload.error !== undefined) {
-      return fallbackResult(
-        request.calldata,
-        attributedCalldata,
-        payload.error.message ?? `RPC error ${payload.error.code ?? "unknown"}`,
-      );
-    }
-    if (typeof payload.result !== "string") {
+    const result = await client.request<unknown>(
+      "eth_call",
+      [transaction, "latest"],
+      { timeoutMs: request.timeoutMs, signal: request.signal },
+    );
+    if (typeof result !== "string") {
       return fallbackResult(request.calldata, attributedCalldata, "RPC response has no result");
     }
-
-    assertHex(payload.result, "eth_call result");
+    assertHex(result, "eth_call result");
     return {
       success: true,
       originalCalldata: request.calldata,
       attributedCalldata,
       selectedCalldata: attributedCalldata,
-      returnData: payload.result,
+      returnData: result,
     };
   } catch (error) {
     return fallbackResult(request.calldata, attributedCalldata, errorMessage(error));

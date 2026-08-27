@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { appendAttribution, prepareAttributedCall } from "../src/index.js";
+import { appendAttribution, decodeAttribution, prepareAttributedCall } from "../src/index.js";
 import type { Hex } from "../src/index.js";
 
 const request = {
@@ -48,6 +48,46 @@ test("accepts canonical JSON-RPC quantities such as zero value", async (context)
 
   const result = await prepareAttributedCall({ ...request, value: "0x0" });
   assert.equal(result.success, true);
+});
+
+test("uses exact sender/value context and schema-one registry data", async (context) => {
+  context.mock.method(
+    globalThis,
+    "fetch",
+    async (_input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      const body = JSON.parse(String(init?.body)) as {
+        id: number;
+        params: Array<{ from?: Hex; value?: Hex; data: Hex }>;
+      };
+      assert.equal(body.params[0]?.from, "0x2222222222222222222222222222222222222222");
+      assert.equal(body.params[0]?.value, "0x2a");
+      const declaration = decodeAttribution(body.params[0]!.data);
+      assert.equal(declaration.registryChainId, 43113n);
+      assert.equal(
+        declaration.registryAddress,
+        "0x3333333333333333333333333333333333333333",
+      );
+      return Response.json({ jsonrpc: "2.0", id: body.id, result: "0x" });
+    },
+  );
+  const result = await prepareAttributedCall({
+    ...request,
+    from: "0x2222222222222222222222222222222222222222",
+    value: "0x2a",
+    registryAddress: "0x3333333333333333333333333333333333333333",
+    registryChainId: 43113n,
+  });
+  assert.equal(result.success, true);
+});
+
+test("rejects incomplete schema-one registry context", async () => {
+  await assert.rejects(
+    prepareAttributedCall({
+      ...request,
+      registryAddress: "0x3333333333333333333333333333333333333333",
+    }),
+    /must be provided together/,
+  );
 });
 
 test("falls back to original calldata when the attributed call reverts", async (context) => {
