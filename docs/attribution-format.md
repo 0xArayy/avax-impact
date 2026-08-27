@@ -133,10 +133,14 @@ Many Solidity functions ignore trailing calldata after ABI decoding. This is not
 universal EVM guarantee for application behavior: a target can validate
 `msg.data.length`, parse calldata in assembly, or route custom fallback logic.
 
-`prepareAttributedCall` performs `eth_call` using attributed data and returns original
-calldata on RPC error, revert, malformed response, or transport failure. Integrations
-should provide the real `from` and `value`. Even then, simulation at `latest` cannot
-guarantee later inclusion-state execution.
+`prepareAttributedCall` resolves one block and performs original and attributed
+`eth_call` simulations against that same state and caller/value context. The original
+call must succeed. Matching return data permits attributed handoff; a recognized
+attributed-only revert permits the default `revert-only` policy to select the already
+tested original calldata. Original-call failures, return-data mismatches, RPC, HTTP,
+timeout, transport, and malformed-result failures return `status: "blocked"` with no
+selected calldata. Equal return data cannot prove equal storage writes, events, gas, or
+later inclusion-state execution.
 
 ## Trust model
 

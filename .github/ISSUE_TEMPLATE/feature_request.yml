@@ -1,0 +1,22 @@
+name: Feature request
+description: Propose a scoped product or integration improvement
+title: "[feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Describe the workflow and evidence that the problem exists.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed outcome
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Trust, compatibility, and draft-standard risks

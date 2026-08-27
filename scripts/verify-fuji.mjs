@@ -24,6 +24,13 @@ await check("source commit is available", async () => {
   });
 });
 
+await check("durable source tag resolves to the recorded commit", async () => {
+  const taggedCommit = execFileSync("git", ["rev-list", "-n", "1", manifest.sourceTag], {
+    encoding: "utf8",
+  }).trim();
+  equal(taggedCommit, manifest.sourceCommit, "source tag commit");
+});
+
 await check("source commit reproduces recorded runtime bytecode", async () => {
   const sourceDirectory = await mkdtemp(join(tmpdir(), "avax-impact-source-"));
   const archivePath = `${sourceDirectory}.tar`;

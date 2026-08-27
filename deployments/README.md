@@ -15,6 +15,6 @@ Registered builder code: `avax-impact`
 Attributed demo transaction:
 [`0x33c0…0821`](https://testnet.snowtrace.io/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821)
 
-The manifest records the source commit, deployment and registration transactions, block
+The manifest records the source commit and durable tag, deployment and registration transactions, block
 numbers, builder record, and RPC verification method. It contains no private keys or
 authenticated RPC credentials.

@@ -88,7 +88,7 @@ export function PreflightPanel() {
         <div>
           <p className="step-label">02 · PREFLIGHT</p>
           <h2 id="preflight-title">Simulate before any signature.</h2>
-          <p>The SDK appends schema 0 attribution, executes the exact <code>eth_call</code>, and selects a safe payload.</p>
+          <p>The SDK pins one Fuji block, simulates the original and attributed payloads with identical context, and compares their return data before selecting anything.</p>
         </div>
         <div className="provenance-stack" aria-label="Safety properties">
           <ProvenanceLabel tone="safe">read-only eth_call</ProvenanceLabel>
@@ -116,7 +116,7 @@ export function PreflightPanel() {
             <input id="preflight-from" value={from} onChange={(event) => { setFrom(event.target.value); setState({ status: "idle" }); }} placeholder="Leave empty unless msg.sender matters" spellCheck={false} aria-invalid={Boolean(fromError)} aria-describedby={fromError ? "preflight-from-error" : undefined} />
           </Field>
           <button className="primary-button primary-button--full" type="button" onClick={runPreflight} disabled={state.status === "loading"}>
-            {state.status === "loading" ? "Simulating exact call…" : "Run Fuji preflight"}<span aria-hidden="true">→</span>
+            {state.status === "loading" ? "Comparing pinned calls…" : "Run Fuji preflight"}<span aria-hidden="true">→</span>
           </button>
           <div className="action-row sample-row" aria-label="Fuji preflight samples">
             <button className="secondary-button" type="button" onClick={() =>
@@ -124,14 +124,14 @@ export function PreflightPanel() {
             }>Load compatible sample</button>
             <button className="secondary-button" type="button" onClick={() =>
               loadSample(FUJI.strictCalldataDemoAddress, SAMPLE_STRICT_CALLDATA)
-            }>Load strict fallback</button>
+            }>Load strict rejection</button>
           </div>
           <p className="button-note">Nothing is signed, submitted, or stored. Output is copied into your own transaction client.</p>
         </div>
 
         <div className="preflight-output" aria-live="polite" aria-busy={state.status === "loading"}>
-          {state.status === "idle" ? <div className="output-placeholder"><span aria-hidden="true">02</span><strong>Awaiting exact simulation</strong><p>The SDK will test the attributed payload at <code>latest</code> on Fuji.</p></div> : null}
-          {state.status === "loading" ? <div className="loading-state"><span />Executing read-only <code>eth_call</code>…</div> : null}
+          {state.status === "idle" ? <div className="output-placeholder"><span aria-hidden="true">02</span><strong>Awaiting compatibility comparison</strong><p>The SDK will pin a Fuji block and test both payloads against that same state.</p></div> : null}
+          {state.status === "loading" ? <div className="loading-state"><span />Pinning a block and comparing read-only <code>eth_call</code> results…</div> : null}
           {state.status === "error" ? <div className="message-state message-state--error"><strong>Preflight stopped</strong><p>{state.message}</p></div> : null}
           {result ? <PreflightResult result={result} /> : null}
         </div>
@@ -142,18 +142,23 @@ export function PreflightPanel() {
 
 function PreflightResult({ result }: { result: DryRunResult }) {
   const description = describePreflight(result);
+  const blocked = result.status === "blocked";
   return (
     <div className="preflight-result">
       <div className={`simulation-banner simulation-banner--${description.tone}`}>
-        <ProvenanceLabel tone={result.success ? "safe" : "warning"}>{result.success ? "eth_call passed" : "eth_call failed"}</ProvenanceLabel>
+        <ProvenanceLabel tone={result.success ? "safe" : "warning"}>{result.success ? "return data matched" : blocked ? "handoff blocked" : "attributed call reverted"}</ProvenanceLabel>
         <h3>{description.title}</h3>
         <p>{description.detail}</p>
       </div>
       <HexField label="Attributed calldata" hint="schema 0 · legacy prototype" value={result.attributedCalldata} emphasize={result.success} />
-      <HexField label="Selected safe calldata" hint={result.success ? "attribution retained" : "original payload restored"} value={result.selectedCalldata} emphasize={!result.success} />
-      {result.returnData ? <HexField label="Return data" hint="untrusted RPC response" value={result.returnData} /> : null}
+      {result.selectedCalldata === null
+        ? <div className="rpc-error"><strong>No calldata selected</strong><code>Resolve the {result.failureKind} failure before signing.</code></div>
+        : <HexField label="Selected calldata" hint={result.success ? "attribution retained" : "explicit fallback policy applied"} value={result.selectedCalldata} emphasize={!result.success} />}
+      {result.originalReturnData && result.attributedReturnData && result.originalReturnData !== result.attributedReturnData
+        ? <><HexField label="Original return data" hint="comparison baseline" value={result.originalReturnData} /><HexField label="Attributed return data" hint="mismatch; handoff blocked" value={result.attributedReturnData} /></>
+        : result.returnData ? <HexField label="Matched return data" hint={`original = attributed at block ${result.blockTag}`} value={result.returnData} /> : null}
       {result.error ? <div className="rpc-error"><strong>RPC / revert detail</strong><code>{result.error}</code></div> : null}
-      <div className="handoff-note"><span aria-hidden="true">↗</span><p><strong>External handoff only.</strong> Copy the selected calldata into a trusted signer. This workbench never requests keys or opens a wallet.</p></div>
+      <div className="handoff-note"><span aria-hidden="true">↗</span><p><strong>{blocked ? "Do not sign yet." : "External handoff only."}</strong> {blocked ? "No payload was selected because the RPC result was inconclusive." : "Copy the selected calldata into a trusted signer. This workbench never requests keys or opens a wallet."}</p></div>
     </div>
   );
 }

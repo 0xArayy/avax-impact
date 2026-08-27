@@ -65,22 +65,39 @@ export function shortenHex(value, front = 12, back = 10) {
     : `${value.slice(0, front)}…${value.slice(-back)}`;
 }
 
-/** @param {{ success: boolean, selectedCalldata: string, originalCalldata: string }} result */
+/** @param {{ success: boolean, status?: "attributed" | "fallback" | "blocked", selectedCalldata: string | null, originalCalldata: string, failureKind?: string, failedStage?: string }} result */
 export function describePreflight(result) {
   if (result.success) {
     return {
       tone: "success",
-      title: "Attributed call is compatible",
-      detail: "The exact attributed payload succeeded in eth_call. Use the attributed calldata in an external signer.",
+      title: "Attributed call matched the baseline",
+      detail: "Original and attributed calls returned identical data at one pinned block. This is point-in-time compatibility evidence, not proof that all state effects are equivalent.",
+    };
+  }
+
+  if (result.status === "blocked" || result.selectedCalldata === null) {
+    if (result.failureKind === "return-data-mismatch") {
+      return {
+        tone: "error",
+        title: "Return data changed",
+        detail: "Both calls succeeded but produced different return data at the same block. No calldata was selected.",
+      };
+    }
+    return {
+      tone: "error",
+      title: "Transaction handoff blocked",
+      detail: result.failedStage === "original-call"
+        ? "The original call did not establish a successful baseline, so attribution compatibility cannot be evaluated."
+        : "The comparison did not establish a sendable payload. Fix the reported failure before signing.",
     };
   }
 
   return {
     tone: "warning",
-    title: "Safe fallback selected",
+    title: "Original calldata selected",
     detail:
       result.selectedCalldata === result.originalCalldata
-        ? "The attributed call failed, so the SDK selected the untouched original calldata."
+        ? "The original call succeeded and the attributed call reverted at the same block, so the configured policy selected the untouched original calldata."
         : "The simulation failed. Review the selected payload before using it.",
   };
 }

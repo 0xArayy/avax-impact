@@ -8,9 +8,9 @@ Safety-first transaction attribution tooling for Avalanche C-Chain and EVM-based
 Avalanche L1s, evaluated against the ERC-8021 draft.
 
 AVAX Impact appends a compact, public builder-code declaration to transaction calldata
-without changing the target function ABI. The SDK can simulate the exact attributed
-call, fall back to the original calldata, fetch and decode transactions, and resolve a
-registry record.
+without changing the target function ABI. The SDK can compare original and attributed
+calls at one pinned block, apply an explicit fallback policy, verify confirmed
+transactions, and resolve a registry record.
 
 [Open the live Fuji attribution workbench](https://avax-impact.0xarayy.workers.dev).
 
@@ -35,24 +35,27 @@ conformant schema 1 Fuji deployment remains grant work.
 - TypeScript schema 0 and pinned schema 1 encoder/decoder with shared conformance vectors.
 - JSON-RPC client, chain-checked transaction fetch/decode, pinned `ICodeRegistry` resolution,
   and a separate legacy Fuji registry resolver.
-- Exact `eth_call` simulation with automatic fallback to original calldata.
+- Same-block original/attributed `eth_call` comparison with typed outcomes: matching
+  return data, baseline-verified fallback, or blocked handoff.
+- Successful-receipt transaction analysis and an ERC-5792 `dataSuffix` wallet helper.
 - Local Solidity registry conforming to the pinned resolver ABI, with owner-controlled
-  payout, metadata, transfer, and permanent deactivation extensions.
+  payout, metadata, two-step ownership transfer, and permanent deactivation extensions.
 - Compatible and deliberately incompatible calldata demo contracts.
 - Reproducible historical Fuji evidence and an automated read-only verifier.
 
 ## How it works
 
 ```text
-function calldata + builder declaration + ERC-8021 marker
-                              |
-                       exact eth_call
-                        /           \
-                 compatible       rejected/error
-                     |                  |
-            attributed calldata   original calldata
-                     |
-          decoder + explicit registry lookup
+resolve one block → original eth_call
+                        |
+                  baseline succeeds
+                        |
+                 attributed eth_call
+              /             |             \
+   same return data     execution revert    mismatch/error
+          |                   |                  |
+attributed calldata   verified-original    handoff blocked
+                           fallback
 ```
 
 Attribution identifies the app, wallet, bot, or backend that the transaction publicly
@@ -71,8 +74,8 @@ npm run check
 
 The root workspace and web app intentionally use separate lockfiles; both install
 commands are required on a clean checkout. `npm run check` is the repository-wide
-build/test/lint/format/shell gate. It currently runs 36 SDK tests, 18 Solidity tests,
-and 10 demo tests.
+build/test/lint/format/package-consumer gate. It currently runs 49 SDK tests, 20 Solidity
+tests, and 10 demo tests.
 
 Start the workbench locally after the gate passes:
 
@@ -107,8 +110,8 @@ const attributed = appendAttributionV1("0x1234", {
 ```
 
 See [the SDK documentation](packages/sdk/README.md) for transaction analysis, registry
-resolution, CLI commands, and the safe dry-run flow. The package is not yet published
-to npm; examples currently use the workspace build.
+resolution, CLI commands, and the pinned-block preflight flow. The package is not yet
+published to npm; examples currently use the workspace build.
 
 ## Historical Fuji proof
 
@@ -124,7 +127,9 @@ Attributed schema 0 demo transaction:
 [`0x33c0…0821`](https://testnet.snowtrace.io/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821).
 
 The deployment source was restored at
-[`0c0665124ed8f1edc5372ed48c77a92a941d08be`](https://github.com/0xArayy/avax-impact/commit/0c0665124ed8f1edc5372ed48c77a92a941d08be).
+[`0c0665124ed8f1edc5372ed48c77a92a941d08be`](https://github.com/0xArayy/avax-impact/commit/0c0665124ed8f1edc5372ed48c77a92a941d08be)
+and preserved by the annotated tag
+[`fuji-schema0-v0.1.0`](https://github.com/0xArayy/avax-impact/tree/fuji-schema0-v0.1.0).
 The [deployment manifest](deployments/fuji.json) records compiler settings, runtime
 bytecode hashes, transactions, registry state, and verification timestamps.
 
@@ -154,9 +159,11 @@ docs/            Format, operations, audit, validation, and grant material
 
 - Extra calldata works with standard Solidity ABI decoding but is not universally safe.
   Contracts that inspect `msg.data.length` or use custom decoders may reject it.
-- `prepareAttributedCall` simulates the exact payload and falls back safely, but an
-  `eth_call` cannot guarantee later inclusion-state execution. Supply the real `from`
-  and `value` context.
+- `prepareAttributedCall` pins one block, requires the original call to succeed, and
+  compares original/attributed return data using identical `from`/`value` context. A
+  recognized attributed-only revert may select the already-tested original payload;
+  mismatches and inconclusive infrastructure failures block handoff. Equal return data
+  still cannot prove equal state effects or later inclusion-state execution.
 - Builder codes are public and spoofable. Never use attribution alone for
   authorization, identity proof, payments, or grant allocation.
 - The contracts are unaudited, the SDK is unpublished, and no external adopters or
@@ -176,6 +183,12 @@ docs/            Format, operations, audit, validation, and grant material
 - [Design-partner pilot program](docs/pilot-program.md)
 - [Copy-paste Fuji pilot flow](docs/pilot-technical-flow.md)
 - [Pilot discovery and evidence field guide](docs/pilot-field-guide.md)
+- [Governance and sustainability](docs/governance.md)
+- [Release runbook](docs/release-runbook.md)
+- [Compatibility corpus and evidence boundary](docs/compatibility-corpus.md)
+- [ERC-8021 upstream/versioning risk](docs/upstream-risk.md)
+- [Signed-attribution design RFC](docs/signed-attribution-rfc.md)
+- [Public discovery and pilot tracker](docs/discovery-tracker.md)
 
 ## License
 

@@ -8,10 +8,12 @@
   "scripts": {
     "build": "npm run build --workspace @avax-impact/sdk && forge build --offline",
     "test": "npm run test --workspace @avax-impact/sdk && forge test --offline",
-    "check": "npm test && npm --prefix demo test && npm --prefix demo run lint && forge fmt --check && bash -n scripts/*.sh",
+    "check": "npm test && npm --prefix demo test && npm --prefix demo run lint && forge fmt --check && bash -n scripts/*.sh && node --check scripts/*.mjs && npm run verify:package",
     "test:contracts": "forge test --offline",
     "test:sdk": "npm run test --workspace @avax-impact/sdk",
     "verify:fuji": "npm run build && node scripts/verify-fuji.mjs",
+    "verify:compatibility": "npm run build --workspace @avax-impact/sdk && node scripts/verify-compatibility.mjs",
+    "verify:package": "bash scripts/verify-package.sh",
     "format:contracts": "forge fmt --check"
   },
   "engines": {

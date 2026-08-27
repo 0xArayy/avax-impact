@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "network": "Avalanche Fuji C-Chain",
+  "chainId": 43113,
+  "purpose": "First-party engineering regression corpus; not evidence of external protocol compatibility or adoption",
+  "cases": [
+    {
+      "id": "legacy-registry-read",
+      "classification": "first-party-standard-abi",
+      "target": "0x8f13a300f2773EB6fa071B9196f6e16129F2549F",
+      "calldata": "0x461a44780000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b617661782d696d70616374000000000000000000000000000000000000000000",
+      "codes": ["compat-corpus"],
+      "expected": {
+        "status": "attributed",
+        "compatibilityEvidence": "return-data-match"
+      }
+    },
+    {
+      "id": "attribution-demo-ping",
+      "classification": "first-party-standard-abi",
+      "target": "0x4e0803c679Fff7F3781856b41C2A810E76c47200",
+      "calldata": "0x773acdef0000000000000000000000000000000000000000000000000000000000000029",
+      "codes": ["compat-corpus"],
+      "expected": {
+        "status": "attributed",
+        "compatibilityEvidence": "return-data-match"
+      }
+    },
+    {
+      "id": "strict-calldata-rejection",
+      "classification": "first-party-strict-calldata",
+      "target": "0x854595b7260f1325f643dd732F926c6B5da3bf8E",
+      "calldata": "0x56a316bb0000000000000000000000000000000000000000000000000000000000000029",
+      "codes": ["compat-corpus"],
+      "expected": {
+        "status": "fallback",
+        "failureKind": "execution-reverted"
+      }
+    }
+  ]
+}

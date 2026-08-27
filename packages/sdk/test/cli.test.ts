@@ -8,6 +8,9 @@ function mockFetchImport(expectedValue: string): string {
   const source = `
     globalThis.fetch = async (_input, init) => {
       const body = JSON.parse(String(init?.body));
+      if (body.method === "eth_blockNumber") {
+        return Response.json({ jsonrpc: "2.0", id: body.id, result: "0x2a" });
+      }
       if (body.params?.[0]?.value !== ${JSON.stringify(expectedValue)}) {
         throw new Error("unexpected RPC value: " + body.params?.[0]?.value);
       }

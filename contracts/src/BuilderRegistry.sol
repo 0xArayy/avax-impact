@@ -37,6 +37,7 @@ contract BuilderRegistry is ICodeRegistry {
     error CodeNotRegistered(bytes32 codeHash);
     error CodeInactive(bytes32 codeHash);
     error NotCodeOwner(bytes32 codeHash, address caller);
+    error NotPendingCodeOwner(bytes32 codeHash, address caller);
 
     event BuilderRegistered(
         bytes32 indexed codeHash,
@@ -52,9 +53,16 @@ contract BuilderRegistry is ICodeRegistry {
     event CodeOwnershipTransferred(
         bytes32 indexed codeHash, address indexed previousOwner, address indexed newOwner
     );
+    event CodeOwnershipTransferStarted(
+        bytes32 indexed codeHash, address indexed currentOwner, address indexed pendingOwner
+    );
+    event CodeOwnershipTransferCancelled(
+        bytes32 indexed codeHash, address indexed currentOwner, address indexed cancelledOwner
+    );
     event BuilderDeactivated(bytes32 indexed codeHash, address indexed owner);
 
     mapping(bytes32 codeHash => BuilderRecord record) private records;
+    mapping(bytes32 codeHash => address pendingOwner) private pendingOwners;
 
     /// @notice Registers a unique builder code for the caller.
     function register(string calldata code, address payout, string calldata metadataURI) external {
@@ -97,14 +105,38 @@ contract BuilderRegistry is ICodeRegistry {
         emit MetadataURIUpdated(hash, previousURI, newMetadataURI);
     }
 
-    /// @notice Transfers control of an active builder code to another address.
-    function transferCode(string calldata code, address newOwner) external {
+    /// @notice Starts a two-step transfer of an active builder code.
+    function proposeCodeOwnershipTransfer(string calldata code, address newOwner) external {
         if (newOwner == address(0)) revert ZeroAddress();
         bytes32 hash = codeHash(code);
         BuilderRecord storage record = _activeRecordOwnedByCaller(hash);
+        pendingOwners[hash] = newOwner;
+        emit CodeOwnershipTransferStarted(hash, record.owner, newOwner);
+    }
+
+    /// @notice Cancels an outstanding transfer proposal.
+    function cancelCodeOwnershipTransfer(string calldata code) external {
+        bytes32 hash = codeHash(code);
+        BuilderRecord storage record = _activeRecordOwnedByCaller(hash);
+        address cancelledOwner = pendingOwners[hash];
+        delete pendingOwners[hash];
+        emit CodeOwnershipTransferCancelled(hash, record.owner, cancelledOwner);
+    }
+
+    /// @notice Accepts control of an active builder code as its proposed new owner.
+    function acceptCodeOwnership(string calldata code) external {
+        bytes32 hash = codeHash(code);
+        BuilderRecord storage record = _activeRecord(hash);
+        if (pendingOwners[hash] != msg.sender) revert NotPendingCodeOwner(hash, msg.sender);
         address previousOwner = record.owner;
-        record.owner = newOwner;
-        emit CodeOwnershipTransferred(hash, previousOwner, newOwner);
+        record.owner = msg.sender;
+        delete pendingOwners[hash];
+        emit CodeOwnershipTransferred(hash, previousOwner, msg.sender);
+    }
+
+    /// @notice Returns the proposed new owner, or the zero address when no transfer is pending.
+    function pendingCodeOwner(string calldata code) external view returns (address) {
+        return pendingOwners[codeHash(code)];
     }
 
     /// @notice Permanently deactivates a builder code.
@@ -112,6 +144,7 @@ contract BuilderRegistry is ICodeRegistry {
     function deactivateCode(string calldata code) external {
         bytes32 hash = codeHash(code);
         BuilderRecord storage record = _activeRecordOwnedByCaller(hash);
+        delete pendingOwners[hash];
         record.active = false;
         emit BuilderDeactivated(hash, msg.sender);
     }

@@ -29,10 +29,20 @@ contract RegistryActor {
         registry.updateMetadataURI(code, metadataURI);
     }
 
-    function transferCode(BuilderRegistry registry, string calldata code, address newOwner)
-        external
-    {
-        registry.transferCode(code, newOwner);
+    function proposeCodeOwnershipTransfer(
+        BuilderRegistry registry,
+        string calldata code,
+        address newOwner
+    ) external {
+        registry.proposeCodeOwnershipTransfer(code, newOwner);
+    }
+
+    function cancelCodeOwnershipTransfer(BuilderRegistry registry, string calldata code) external {
+        registry.cancelCodeOwnershipTransfer(code);
+    }
+
+    function acceptCodeOwnership(BuilderRegistry registry, string calldata code) external {
+        registry.acceptCodeOwnership(code);
     }
 
     function deactivateCode(BuilderRegistry registry, string calldata code) external {
@@ -190,10 +200,16 @@ contract BuilderRegistryTest {
         alice.register(registry, "avax-impact", address(0xA11CE), "ipfs://v1");
         alice.updatePayoutAddress(registry, "avax-impact", address(0xBEEF));
         alice.updateMetadataURI(registry, "avax-impact", "ipfs://v2");
-        alice.transferCode(registry, "avax-impact", address(bob));
+        alice.proposeCodeOwnershipTransfer(registry, "avax-impact", address(bob));
+        require(
+            registry.pendingCodeOwner("avax-impact") == address(bob),
+            "pending owner was not recorded"
+        );
+        bob.acceptCodeOwnership(registry, "avax-impact");
 
         BuilderRegistry.BuilderRecord memory record = registry.resolve("avax-impact");
         require(record.owner == address(bob), "ownership was not transferred");
+        require(registry.pendingCodeOwner("avax-impact") == address(0), "pending owner not cleared");
         require(record.payoutAddress == address(0xBEEF), "payout address was not updated");
         require(_equal(record.metadataURI, "ipfs://v2"), "metadata was not updated");
 
@@ -207,6 +223,37 @@ contract BuilderRegistryTest {
         require(
             _equal(registry.codeURI("avax-impact"), "ipfs://v3"),
             "canonical URI did not track update"
+        );
+    }
+
+    function testTransferRequiresAcceptanceAndCanBeCancelled() public {
+        alice.register(registry, "avax-impact", address(0xA11CE), "");
+        alice.proposeCodeOwnershipTransfer(registry, "avax-impact", address(bob));
+
+        BuilderRegistry.BuilderRecord memory record = registry.resolve("avax-impact");
+        require(record.owner == address(alice), "proposal changed owner before acceptance");
+
+        (bool wrongActorSucceeded,) = address(alice).call(
+            abi.encodeCall(RegistryActor.acceptCodeOwnership, (registry, "avax-impact"))
+        );
+        require(!wrongActorSucceeded, "non-pending owner accepted transfer");
+
+        alice.cancelCodeOwnershipTransfer(registry, "avax-impact");
+        require(registry.pendingCodeOwner("avax-impact") == address(0), "proposal not cancelled");
+
+        (bool cancelledAcceptanceSucceeded,) = address(bob).call(
+            abi.encodeCall(RegistryActor.acceptCodeOwnership, (registry, "avax-impact"))
+        );
+        require(!cancelledAcceptanceSucceeded, "cancelled transfer was accepted");
+    }
+
+    function testDeactivationClearsPendingOwner() public {
+        alice.register(registry, "avax-impact", address(0xA11CE), "");
+        alice.proposeCodeOwnershipTransfer(registry, "avax-impact", address(bob));
+        alice.deactivateCode(registry, "avax-impact");
+        require(
+            registry.pendingCodeOwner("avax-impact") == address(0),
+            "pending owner survived deactivation"
         );
     }
 
@@ -250,7 +297,9 @@ contract BuilderRegistryTest {
 
         alice.register(registry, "second-code", address(0xA11CE), "");
         (bool ownerSucceeded,) = address(alice).call(
-            abi.encodeCall(RegistryActor.transferCode, (registry, "second-code", address(0)))
+            abi.encodeCall(
+                RegistryActor.proposeCodeOwnershipTransfer, (registry, "second-code", address(0))
+            )
         );
         require(!ownerSucceeded, "zero owner should revert");
     }

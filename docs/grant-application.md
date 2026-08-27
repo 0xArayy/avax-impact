@@ -1,6 +1,6 @@
 # AVAX Impact: Team1 Mini Grant project narrative
 
-Prepared: **2026-08-27**. External market sources were accessed on 2026-08-26. This is
+Prepared: **2026-08-28**. External market sources were accessed on 2026-08-26. This is
 a public, evidence-backed project narrative.
 
 ## Application facts
@@ -24,7 +24,7 @@ and community initiatives, with funding up to $10,000 as of 2026-08-26
 ## One-line pitch
 
 AVAX Impact is a safety-first Avalanche attribution bundle implementing ERC-8021 draft
-commit `457532f5…` locally, with an exact-call fallback and an existing schema 0 Fuji
+commit `457532f5…` locally, with typed preflight outcomes and an existing schema 0 Fuji
 prototype.
 
 ## Short project summary
@@ -37,12 +37,14 @@ the builder code through an explicitly selected registry.
 
 The local MVP includes schema 0 and pinned schema 1 codecs, a Solidity registry that
 implements the pinned `ICodeRegistry` read ABI, a TypeScript SDK and CLI, exact
-`eth_call` simulation with fallback to original calldata, automated tests, and a live
+same-block original/attributed `eth_call` comparison with explicit baseline-verified
+fallback, confirmed-receipt analysis,
+automated tests, and a live
 public inspection/preflight workbench. The existing Fuji contracts and confirmed
 attributed transaction are an earlier schema 0 wire-format prototype with AVAX Impact's
 legacy registry, not a canonical or interoperable registry deployment. Grant funding
-will first close that deployment gap, then build a reproducible C-Chain data export and
-two external Fuji design-partner pilots.
+will first validate demand and secure design-partner commitments. A reproducible release,
+pilots, and the smallest required data export follow only if that gate passes.
 
 Attribution is a public declaration, not a signature. AVAX Impact will not use it for
 authorization or automatic reward payments.
@@ -99,8 +101,10 @@ AVAX Impact's evaluated, safety-first Avalanche bundle is:
   grant milestone for a new conformant Fuji proof;
 - a historical schema 0 Fuji deployment with restored, automatically verifiable
   provenance;
-- exact simulation of the attributed payload before signing;
-- deterministic fallback to original calldata on error or revert;
+- a pinned-block comparison that requires the original call to succeed and original and
+  attributed return data to match before attributed handoff;
+- deterministic fallback to the already-tested original calldata on a recognized
+  attributed-only execution revert, while mismatch and infrastructure failures block;
 - a deliberately strict Fuji contract that proves the negative path;
 - no proxy, custody, or target-contract upgrade;
 - explicit “declared attribution” language that does not overstate identity or reward
@@ -124,9 +128,12 @@ Public work completed before grant approval:
   [`0x33c0…0821`](https://testnet.snowtrace.io/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821);
 - TypeScript encoder, decoder, validator, CLI, RPC decoder, transaction analyzer, and
   canonical/legacy registry readers;
-- exact-call simulation and fallback implementation;
+- same-block dual-call comparison with typed attributed/fallback/blocked outcomes;
+- successful-receipt transaction analysis and ERC-5792 `dataSuffix` wallet handoff;
+- two-step registry ownership transfer and public security/governance/release processes;
 - automated Solidity and TypeScript tests;
-- restored deployment source commit `0c066512…`, public
+- restored deployment source commit `0c066512…`, annotated tag
+  `fuji-schema0-v0.1.0`, public
   [Fuji manifest](../deployments/fuji.json), and `npm run verify:fuji`, which rebuilds
   that source and checks live bytecode, receipts, legacy registry state, and the demo
   transaction;
@@ -142,29 +149,45 @@ All adoption numbers below are targets, not current traction.
 
 | Milestone | Due | Public acceptance criteria | Budget |
 | --- | --- | --- | ---: |
-| 1. Conformant Fuji developer release | End of week 3 | Published package/release; immutable pin to ERC-8021 draft commit `457532f5…`; shared cross-implementation schema 0/schema 1 fixtures; newly deployed and read-only-verified `ICodeRegistry`-conformant Fuji registry; confirmed schema 1 Fuji transaction that embeds and resolves that registry; verifier checks rebuilt/live bytecode, receipts, all four registry views, registry chain ID, and decoded transaction; Viem/Wagmi and backend recipes; two independent developers complete the Fuji quickstart; compatibility corpus includes accepted and strict-rejection cases | $2,000 |
-| 2. C-Chain/Fuji attribution export | End of week 6 | Open-source confirmed-transaction indexer or reproducible export; JSON/CSV and read API; records include tx hash, block, raw suffix, code, and registry resolution; one independent analyst reproduces a published count | $3,000 |
-| 3. External design-partner pilots | End of week 9 | 10 qualified interviews; at least 3 teams agree to test; two external Fuji integrations; at least 50 confirmed attributed pilot transactions total; published integration time, failures, fallback cases, and hashes with participant consent | $3,000 |
-| 4. Review, remediation, and public report | End of week 10 | Targeted independent review of registry/decoder/fallback boundaries; high-severity findings resolved before mainnet recommendation; final report publishes achieved and missed targets, spend, unresolved risks, and next-chain decision | $2,000 |
+| 1. Demand validation and commitments | End of week 2 | 10 qualified problem interviews completed before a product demo; current workarounds and downstream consumer documented; at least 3 written pilot commitments with named integration owners; anonymized positive and negative findings; explicit go/narrow/stop decision | $1,000 |
+| 2. Conformant Fuji developer release | End of week 5, only if Milestone 1 passes | Published package and immutable release; pinned fixtures; newly deployed and read-only-verified `ICodeRegistry`-conformant Fuji registry; confirmed schema 1 transaction; Viem/Wagmi, backend, and ERC-5792 recipes; two independent developers complete the quickstart; accepted and strict-rejection compatibility cases | $3,000 |
+| 3. External pilots and minimal evidence export | End of week 8 | Two external Fuji integrations; at least 50 confirmed attributed pilot transactions total; published integration time, blocked/fallback cases, and consented hashes; smallest reproducible JSON/CSV/API surface required by pilots; one independent downstream user reproduces a published count | $3,500 |
+| 4. Review, remediation, and public report | End of week 10 | Targeted independent review of registry/decoder/fallback boundaries; high-severity findings resolved before mainnet recommendation; final report publishes achieved and missed targets, spend, unresolved risks, maintenance owner, and next-chain decision | $2,500 |
 | **Total** |  |  | **$10,000** |
 
-If a pilot or adoption threshold is missed, the final report will show the miss. Payment
-or completion should not be justified with self-generated transaction volume alone.
+Milestones are proposed as conditional tranches. If Milestone 1 fails, hosted index/API
+work stops and later engineering funds should remain undistributed or be returned under
+Team1 terms. Payment or completion cannot be justified with self-generated transaction
+volume alone.
 
 ## Budget rationale
 
 | Use | Amount | Rationale and evidence |
 | --- | ---: | --- |
-| Engineering: package, fixtures, index/export, API | $5,500 | Core open-source deliverables in milestones 1-2 |
+| Engineering: package, fixtures, registry release, pilot export/API | $4,000 | Demand-gated open-source deliverables in milestones 2-3 |
 | Targeted independent security/compatibility review | $2,000 | Review registry lifecycle, parsing boundaries, simulation/fallback assumptions; explicitly not marketed as a full audit |
-| Pilot integration support and small builder bounties | $1,000 | Reduce uncompensated work for two external Avalanche design partners; recipients and amounts reported publicly |
-| RPC, hosting, monitoring, and backfill | $800 | Operate the public Fuji/C-Chain read surface during the grant and preserve reproducible evidence |
-| Documentation, demo, and final public report | $700 | Integration recipes, compatibility results, milestone evidence, and spend report |
+| Discovery interviews and evidence synthesis | $1,000 | Establish demand before data-product investment and publish negative evidence |
+| Pilot integration support and small builder bounties | $1,500 | Reduce uncompensated work for two external Avalanche design partners; recipients and amounts reported publicly |
+| RPC, hosting, monitoring, and backfill | $800 | Operate only the Fuji/C-Chain surface justified by pilots and preserve reproducible evidence |
+| Documentation, demo, release, and final public report | $700 | Integration recipes, compatibility results, immutable artifacts, milestone evidence, and spend report |
 | **Total** | **$10,000** | No token purchase, trading, non-Avalanche deployment, or founder travel budget |
 
 Material reallocation above 20% between categories will be disclosed in the public final
 report. Any unused funds will be handled according to Team1 terms rather than silently
 reclassified.
+
+## Team, governance, and sustainability
+
+The repository currently has one public maintainer, GitHub user `@0xArayy`; no larger
+team, prior institutional adoption, or audit history is claimed. This is a bus-factor
+risk, so public APIs and deployments require reviewable pull requests, CI, changelogged
+releases, immutable tags, and reproducible verifier evidence. The complete policy is in
+[`governance.md`](governance.md).
+
+The MIT-licensed SDK, fixtures, and verifier do not depend on permanent hosted services.
+After the grant, the maintainer commits to security fixes and evidence-backed draft
+migrations. A hosted index/API continues only if pilots identify both a downstream user
+and an operating sponsor; otherwise the supported output is a reproducible local export.
 
 ## Community traction plan
 
@@ -181,6 +204,9 @@ from Avalanche developer channels and direct outreach, using consistent screenin
 The public findings will include negative interviews and abandoned integrations. Detailed
 falsification thresholds are in
 [`docs/market-validation.md`](market-validation.md).
+Public aggregate progress starts at zero in the
+[`discovery tracker`](discovery-tracker.md); compatibility claims are bounded by the
+[`compatibility corpus`](compatibility-corpus.md).
 
 ## Long-term Avalanche impact
 
@@ -203,10 +229,10 @@ copyable declarations.
 | Risk | Response |
 | --- | --- |
 | No external teams rank the problem highly | Stop L1 expansion; publish interviews and narrow to the safety/decoder tooling or stop the product |
-| Strict calldata or custom routers reject suffixes | Preserve deterministic original-calldata fallback; publish incompatibilities rather than hide them |
+| Strict calldata or custom routers reject suffixes | Require a successful original baseline; use recognized attributed-only revert fallback; block on mismatched return data or inconclusive infrastructure; publish incompatibilities |
 | Public builder code is spoofed | Label records as declared attribution; never treat the registry as transaction authorization or automate payouts |
-| ERC-8021 draft changes | Keep the exact `457532f5…` pin in artifacts and fixtures; publish a migration decision before supporting another revision or schema |
-| Indexer duplicates existing Avalanche infrastructure | Use Builder Hub/Data API-compatible exports and keep the origin decoder thin; do not rebuild general transaction analytics |
+| ERC-8021 draft changes | Keep the exact `457532f5…` pin in artifacts and fixtures; follow the [upstream risk policy](upstream-risk.md) and publish a migration decision before supporting another revision or schema |
+| Indexer duplicates existing Avalanche infrastructure | Do not build it before the demand gate; afterward use Builder Hub/Data API-compatible exports and keep the origin decoder thin |
 | Security review finds a high-severity issue | Pause mainnet recommendation, remediate, and publish the finding and fix |
 | Grant is not awarded | Continue maintaining the existing Fuji MVP; reduce scope to interviews and developer release; do not block already-public work on funding |
 

@@ -34,8 +34,9 @@ phase is designed to generate the missing community and use evidence.
 
 1. **Avalanche first.** Ship and validate on C-Chain before adding an Avalanche L1. Do
    not spend grant funds on unrelated chains.
-2. **Never trade execution safety for attribution.** If the exact attributed call cannot
-   be simulated successfully, select the original calldata.
+2. **Never trade execution safety for attribution.** Fall back to original calldata only
+   after a recognized execution revert. Infrastructure failures are inconclusive and
+   block handoff unless the integrator explicitly chooses a broader policy.
 3. **Declared means declared.** A decoded public code is not builder authorization,
    identity proof, or entitlement to payment.
 4. **Open evidence.** Fixtures, deployments, compatibility results, and milestone reports
@@ -53,7 +54,8 @@ phase is designed to generate the missing community and use evidence.
 2. Its app, wallet, backend, or agent prepares the original target call.
 3. The SDK appends the attribution suffix.
 4. The SDK performs `eth_call` with the same `from`, `to`, value, and attributed data.
-5. On success, the wallet signs attributed calldata; on failure, it signs the original.
+5. On success, the wallet signs attributed calldata; on a recognized execution revert,
+   policy may select the original; on RPC/infrastructure failure, signing is blocked.
 6. After confirmation, the decoder or indexer extracts the declared code and resolves its
    registry metadata.
 7. Analysts reconcile attributed transactions against public hashes and raw calldata.
@@ -88,7 +90,7 @@ Evidence already in the repository:
 
 - builder registry and compatible/strict demo contracts;
 - TypeScript encoder, decoder, validator, CLI, and RPC transaction decoder;
-- exact-call simulation with original-calldata fallback;
+- pinned-block original/attributed comparison with baseline-verified fallback;
 - public legacy schema 0 Fuji contracts, AVAX Impact registry entry, and confirmed
   attributed transaction;
 - restored deployment source provenance plus automated rebuild/live verification;
@@ -98,9 +100,21 @@ The local schema 1 codec and registry candidate conform to the pinned draft surf
 The existing Fuji deployment does not: it remains schema 0 plus the legacy AVAX Impact
 registry. This is prototype evidence, not traction.
 
-### Phase 1: reproducible developer release
+### Phase 1: demand validation and design-partner commitments
 
-Target window: weeks 1-3 after grant start.
+Target window: weeks 1-2 after grant start.
+
+- interview at least 10 qualified Avalanche transaction builders before a product demo;
+- identify the existing workaround, cost of the problem, and who consumes attribution;
+- obtain at least three written pilot commitments with named integration owners;
+- publish anonymized findings, including negative evidence and a go/stop decision.
+
+Gate: without three credible pilot commitments or a repeated high-priority job, do not
+fund a hosted indexer. Narrow the project or stop after publishing the evidence.
+
+### Phase 2: reproducible developer release
+
+Target window: weeks 2-5 after grant start, only after the demand gate.
 
 - publish a versioned package and immutable release artifacts;
 - preserve the exact `457532f5…` draft pin and publish schema 0/schema 1
@@ -114,37 +128,29 @@ Target window: weeks 1-3 after grant start.
 - publish a compatibility corpus with positive and strict-calldata negative cases;
 - document error taxonomy, fallback telemetry, and privacy/trust language.
 
-Gate: two independent developers must complete the Fuji recipe from public docs. If they
-cannot, fix the integration surface before building a production indexer.
+Gate: two independent developers, ideally from committed pilots, must complete the Fuji
+recipe from public docs. If they cannot, fix the integration surface before data work.
 
-### Phase 2: C-Chain attribution data product
+### Phase 3: pilot integrations and minimal evidence export
 
-Target window: weeks 3-6.
+Target window: weeks 5-8.
 
-- build a minimal confirmed-transaction indexer/export for C-Chain and Fuji;
+- integrate two committed builders on Fuji and collect confirmed public hashes;
+- build the smallest reproducible confirmed-transaction export those pilots require;
 - resolve registry metadata at a documented block/time;
 - expose JSON/CSV plus a small read API, with replay/backfill instructions;
 - label malformed, inactive, unregistered, and unresolved codes explicitly;
 - keep raw transaction hash and suffix bytes in every record for auditability.
 
-Gate: one independent analyst must reproduce a pilot count from public chain data. If
-the count depends on private logs, the product has not satisfied the job.
-
-### Phase 3: design-partner pilots
-
-Target window: weeks 5-9.
-
-- interview 10 qualified Avalanche C-Chain teams before presenting the solution;
-- integrate two willing apps, wallets, or agents on Fuji;
 - record integration time, fallback cases, abandoned attempts, and confirmed hashes;
 - publish anonymized interview findings unless a participant consents to attribution;
 - request one downstream evaluation from an analyst, ecosystem operator, or grant
   reviewer without implying Foundation endorsement.
 
-Gate: the thresholds in [`market-validation.md`](market-validation.md) determine whether
-to continue, narrow, or stop.
+Gate: one independent downstream user must reproduce a pilot count from public chain
+data. If no downstream user wants the output, stop hosted index/API development.
 
-### Phase 4: release and next-chain decision
+### Phase 4: review, report, and next-chain decision
 
 Target window: weeks 9-10.
 
@@ -168,8 +174,8 @@ These are proposed targets, not current results:
 - at least 50 confirmed attributed Fuji transactions across the two pilots;
 - a public compatibility corpus covering at least five commonly integrated C-Chain
   contracts/protocols plus strict negative cases;
-- zero cases where the SDK selects attributed calldata after the exact simulation rejects
-  it;
+- zero cases where the SDK selects attributed calldata after the same-block comparison
+  detects a failure or return-data mismatch;
 - one independent reproduction of pilot attribution counts from public data;
 - all known high-severity review findings resolved before recommending mainnet use.
 
@@ -181,7 +187,7 @@ outcomes.
 | Risk | Consequence | Mitigation / decision |
 | --- | --- | --- |
 | Public codes can be copied | False declarations and inflated counts | Label as declared attribution; expose sender and raw evidence; never automate payouts in v0 |
-| Target rejects trailing data | Revert or changed routing | Exact-call simulation and deterministic fallback; publish compatibility corpus |
+| Target rejects or changes behavior with trailing data | Revert, changed return data, or changed routing | Pinned-block baseline comparison and recognized-revert fallback; block mismatches and inconclusive infrastructure failures; publish compatibility corpus |
 | Simulation differs from inclusion state | A later broadcast can still fail for ordinary state reasons | Do not promise execution; preserve wallet gas/state handling and record selected calldata |
 | ERC-8021 changes before finalization | Fixture or decoder drift | Keep `457532f5…` immutable in current artifacts; version any migration and avoid “final standard” language |
 | Wallets hide/transform calldata | Integration failure | Test direct EOA, ERC-5792 capability, and backend paths separately; do not claim universal wallet support |
@@ -196,7 +202,8 @@ consumer pass the validation gates. Otherwise publish the findings and choose on
 
 - simplify to a compatibility-safe ERC-8021 SDK if origin demand exists but registry or
   indexing does not;
-- add optional builder signatures in a new schema if spoofability is the blocking issue;
+- evaluate the [separately versioned signed-attribution RFC](signed-attribution-rfc.md)
+  only if spoofability is the blocking issue;
 - stop the product if teams do not value durable transaction origin.
 
 The grant buys a public answer to the adoption question, not a predetermined claim that

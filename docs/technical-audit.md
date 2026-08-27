@@ -1,6 +1,6 @@
 # Technical implementation assessment
 
-Assessment date: **2026-08-27**
+Assessment date: **2026-08-28**
 Scope: contracts, SDK, operational scripts, deployment evidence, tests, CI, and public
 documentation in the current checkout.
 
@@ -13,16 +13,17 @@ path than the historical deployment alone:
   `457532f5c064a4619868ee5e4950f0cc32a7917e`;
 - the current local registry implements the pinned `ICodeRegistry` read ABI and retains
   explicit AVAX Impact lifecycle extensions;
-- exact-call preflight, transaction analysis, standard/legacy registry reads, shared
-  fixtures, and a complete read-only CLI are tested;
-- historical Fuji provenance is restored to reachable commit `0c066512…`, and
-  `npm run verify:fuji` rebuilds that source before checking live chain evidence.
+- pinned-block original/attributed preflight comparison, transaction analysis,
+  standard/legacy registry reads, shared fixtures, and a complete read-only CLI are tested;
+- historical Fuji provenance is restored to reachable commit `0c066512…`, preserved by
+  annotated tag `fuji-schema0-v0.1.0`, and `npm run verify:fuji` verifies the tag and
+  rebuilds that source before checking live chain evidence.
 
 The most important boundary is deployment versioning. The existing Fuji registry and
 transaction predate the current conformance work. They prove a schema 0 wire-format
 prototype with the legacy AVAX Impact registry, not a canonical/interoperable registry
 or a schema 1 deployment. A new conformant Fuji registry plus a verified schema 1
-transaction remains Milestone 1.
+transaction remains Milestone 2 after the demand-validation gate.
 
 The project also remains pre-adoption and pre-assurance: the package is unpublished,
 the contracts are unaudited, and no external interview, adopter, or pilot is documented.
@@ -45,25 +46,26 @@ ERC-8021 is still a draft.
 | Layer | Responsibility | Boundary |
 | --- | --- | --- |
 | `packages/sdk/src/codec.ts` | Schema 0/schema 1 encode, decode, detect, strip | Pure local parsing of untrusted public bytes |
-| `packages/sdk/src/dry-run.ts` | Exact attributed `eth_call`; original-calldata fallback | Does not sign/broadcast; state can change after simulation |
+| `packages/sdk/src/dry-run.ts` | Pin a block; execute original/attributed `eth_call`; compare return data; return typed attributed/fallback/blocked result | Matching return data does not prove equal storage/events/gas; state can change after simulation |
 | `packages/sdk/src/rpc.ts` | Timeout-aware JSON-RPC envelope/error validation | Trusts the caller-selected endpoint for returned chain data |
-| `packages/sdk/src/transaction.ts` | Chain-check and declared/unattributed/malformed classification | Does not fetch receipts and permits pending `blockNumber: null`; decoded data is not confirmation or authentication |
+| `packages/sdk/src/transaction.ts` | Chain-check, attribution classification, and optional successful-receipt confirmation | `analyzeTransaction` permits pending inspection; `analyzeConfirmedTransaction` checks mined block, receipt identity, and status |
 | `packages/sdk/src/registry.ts` | Pinned `ICodeRegistry` reader and separate legacy reader | Registry data is public owner-asserted metadata, not sender authorization |
 | `packages/sdk/src/cli.ts` | Encode/decode/decode-tx/resolve/preflight/validate workflows | Read/preflight tool; does not manage keys or submit transactions |
-| `contracts/src/BuilderRegistry.sol` | First-come code registration, payout/URI, transfer, deactivation, pinned resolver views | Non-custodial and outside target execution; permits squatting/front-running |
+| `contracts/src/BuilderRegistry.sol` | First-come code registration, payout/URI, two-step transfer, deactivation, pinned resolver views | Non-custodial and outside target execution; still permits squatting/front-running |
 | Demo contracts | Positive and strict trailing-calldata behavior | Fixtures only, not universal compatibility evidence |
 | Shell deployment/send scripts | Fuji mutation path with chain guard | Uses an environment private key; operational hardening remains |
 | `scripts/verify-fuji.mjs` | Rebuild and read-only live evidence checks | Verifies the historical manifest, not a future conformant deploy |
 
 ## Current SDK and contract evidence
 
-Local commands run on 2026-08-27:
+Local commands run on 2026-08-28:
 
 | Command | Observed result |
 | --- | --- |
-| `npm run test:sdk` | PASS: 36 tests, 0 failed/skipped |
-| `npm run test:contracts` | PASS: 18 tests, 0 failed/skipped, including 256-run fuzz cases |
-| `npm run check` | PASS: core suites, demo build/tests/lint, Solidity format, and shell syntax |
+| `npm run test:sdk` | PASS: 49 tests, 0 failed/skipped; observed coverage above 88% lines, 76% branches, and 97% functions against enforced 85/70/95 floors |
+| `npm run test:contracts` | PASS: 20 tests, 0 failed/skipped, including 256-run fuzz cases |
+| `npm run check` | PASS: core suites, demo build/tests/lint, Solidity format, shell syntax, and clean tarball consumer install |
+| `npm run verify:compatibility` | PASS: two first-party matching-return cases and one baseline-verified strict fallback on live Fuji; no external-protocol claim |
 | `npm audit --audit-level=high` (root and `demo`) | PASS: 0 known vulnerabilities in both lock-file graphs |
 | restored source lookup | PASS: commit `0c0665124ed8f1edc5372ed48c77a92a941d08be` exists with commit time before deployment |
 | `npm run verify:fuji` source phase | PASS: restored commit is available and reproduces recorded runtime bytecode |
@@ -73,15 +75,18 @@ The SDK suite covers:
 - pinned schema 1 example and legacy schema 0 round trips;
 - malformed hex, marker, length, schema, code, and registry context;
 - shared conformance vectors;
-- exact sender/value dry-run context and fallback paths;
+- block pinning, exact sender/value context, original-baseline enforcement, return-data
+  comparison, explicit fallback policies, and blocked infrastructure failures;
 - JSON-RPC HTTP, RPC, malformed, timeout, abort, and transport handling;
-- transaction chain checking and declared/unattributed/malformed classification;
+- transaction chain checking, declared/unattributed/malformed classification, and successful-receipt confirmation;
+- ERC-5792 `dataSuffix` capability handoff;
 - pinned `ICodeRegistry` resolution and legacy Fuji record resolution;
 - CLI schema 1 output, full command surface, and partial-context rejection.
 
-`analyzeTransaction` fetches and decodes a transaction but does not establish
-confirmation. The public Fuji sample is confirmed separately because `verify:fuji`
-checks its successful receipt and recorded block before decoding it.
+`analyzeTransaction` fetches and decodes for inspection without establishing
+confirmation. `analyzeConfirmedTransaction` additionally rejects pending, reverted,
+missing-receipt, and receipt-identity mismatches. The Fuji verifier retains independent
+manifest/block checks.
 
 The contract suite covers the four canonical selectors and views, lifecycle transitions,
 authorization, input bounds, permanent deactivation, and fuzzed validity/lifecycle
@@ -90,8 +95,8 @@ historical Fuji bytecode.
 
 ## Browser acceptance
 
-The current workbench was also exercised through a real Chromium session against the
-local dev server and public Fuji RPC on 2026-08-27. This caught a browser-only unbound
+The earlier single-attributed-call workbench was exercised through a real Chromium
+session against the local dev server and public Fuji RPC on 2026-08-27. This caught a browser-only unbound
 `fetch` failure that Node mocks did not expose; the RPC client now binds the host fetch
 implementation and includes a regression test. The complete browser round was then
 restarted and passed:
@@ -106,27 +111,29 @@ restarted and passed:
 - desktop and 390×844 layouts rendered without horizontal control overflow, and the
   browser console contained no application errors after the fixed rerun.
 
-The demo additionally has 10 passing strict-sample, sample-recovery, validation,
-presentation, provenance, fallback, pending-state, SSR, and production-handler tests.
-This is strong functional evidence, not a formal WCAG or third-party usability
-certification.
+The current pinned-block dual-call version has 10 passing strict-sample,
+sample-recovery, validation, comparison-presentation, provenance, fallback,
+pending-state, SSR, and production-handler tests. Its production redeploy/browser round
+is still pending. This is functional evidence, not a formal WCAG or third-party
+usability certification.
 
 ## Deployment provenance and automatic verification
 
 `deployments/fuji.json` now records:
 
-- source commit `0c0665124ed8f1edc5372ed48c77a92a941d08be` and immutable URL;
+- source commit `0c0665124ed8f1edc5372ed48c77a92a941d08be`, immutable URL, and
+  published annotated tag `fuji-schema0-v0.1.0`;
 - a source commit timestamp before the deployment timestamp;
 - Solidity `0.8.24`, optimizer settings, runs, and Cancun EVM target;
 - runtime bytecode sizes and hashes;
 - every deployment, registration, and attributed transaction hash/block;
 - the legacy builder record and explicit legacy/schema 0 labels;
-- `reverifiedAt: 2026-08-27T08:05:43Z`.
+- `reverifiedAt: 2026-08-27T21:37:22Z`.
 
 `npm run verify:fuji` automates the acceptance path:
 
 1. rebuild the current checkout;
-2. confirm and archive the recorded deployment commit;
+2. confirm that the durable source tag resolves to the recorded deployment commit;
 3. rebuild that exact historical source offline;
 4. compare rebuilt bytecode to the manifest and live Fuji bytecode;
 5. check Fuji chain ID and all recorded receipt status/block pairs;
@@ -150,7 +157,7 @@ detects later RPC availability or chain drift.
 | Existing Fuji registry implements pinned read ABI | No; it predates the interface and uses AVAX Impact's legacy resolver |
 | Existing Fuji tx proves schema 1 registry context | No; it is schema 0 |
 | Avalanche selected a canonical registry | No such claim or evidence |
-| Project has a new interoperable Fuji registry | Not yet; this is Milestone 1 |
+| Project has a new interoperable Fuji registry | Not yet; this is Milestone 2 after the demand gate |
 
 ## Security and operational risks
 
@@ -158,8 +165,8 @@ detects later RPC availability or chain drift.
 | --- | --- | --- |
 | High if monetized | Codes are copyable and declarations are spoofable | Never authorize or automate payouts/rewards/grants from attribution alone; add a separate identity policy if monetization is proposed |
 | High if identity-critical | First-come registration permits squatting/front-running | Add claim/dispute or commit-reveal controls before treating records as verified identity |
-| Medium | Successful `eth_call` can diverge from later inclusion state | Supply real sender/value, preserve original-calldata fallback, and never promise execution |
-| Medium | One-step code ownership transfer | Use two-step propose/accept before production identity use |
+| Medium | Successful `eth_call` can diverge from later inclusion state | Supply real sender/value, permit fallback only for recognized reverts by default, and never promise execution |
+| Remediated locally | Accidental one-step code ownership transfer | Two-step propose/accept plus cancellation and deactivation cleanup are implemented and tested; historical deployment remains legacy |
 | Medium | Metadata URI and payout are owner-asserted | Sanitize fetched content and label fields as unendorsed metadata |
 | Medium | Shell mutation path uses an environment private key | Keep Fuji-only low value; prefer keystore/hardware signer for production |
 | Medium | No independent security audit | Complete targeted review and remediate high severity findings before mainnet recommendation |
@@ -169,6 +176,8 @@ detects later RPC availability or chain drift.
 - No external design-partner interviews, integrations, recurring users, revenue, or
   independently measured adoption are documented.
 - The npm package is not published.
+- The first-party compatibility corpus passes live Fuji, but it contains no external
+  protocol or adopter cases yet.
 - No new pinned-ABI registry or schema 1 attribution transaction is deployed on Fuji.
 - Cross-implementation fixtures currently have only one authoritative SDK consumer.
 - There is no proof that downstream analysts will accept a spoofable declaration for
@@ -184,7 +193,8 @@ The current repository is credible evidence of implementation ability and carefu
 modeling. It should be presented as an evaluated safety-first Avalanche bundle, never as
 the first or only attribution product. Approval should fund the next evidence step:
 
-1. publish the pinned developer release and cross-implementation fixtures;
-2. deploy and automatically verify a conformant registry plus schema 1 Fuji transaction;
-3. test adoption with independent developers, pilots, and a downstream analyst;
-4. obtain targeted security/compatibility review before any mainnet recommendation.
+1. complete problem interviews and secure written pilot commitments;
+2. publish the pinned developer release and cross-implementation fixtures;
+3. deploy and automatically verify a conformant registry plus schema 1 Fuji transaction;
+4. test adoption with independent developers, pilots, and a downstream analyst;
+5. obtain targeted security/compatibility review before any mainnet recommendation.

@@ -93,7 +93,7 @@ authenticate the transaction producer.
 The same flow is available without installation in the
 [public workbench](https://avax-impact.0xarayy.workers.dev).
 
-## 4. Reproduce both exact-call decisions
+## 4. Reproduce both pinned-block comparison decisions
 
 Choose a temporary public code for the rehearsal and validate its registry-policy form:
 
@@ -122,6 +122,8 @@ node packages/sdk/dist/src/cli.js preflight \
 Acceptance:
 
 - `success` is `true`; and
+- `compatibilityEvidence` is `return-data-match`;
+- `originalReturnData` equals `attributedReturnData`; and
 - `selectedCalldata` equals `attributedCalldata`.
 
 ### Strict target
@@ -141,11 +143,14 @@ node packages/sdk/dist/src/cli.js preflight \
 Acceptance:
 
 - `success` is `false`;
+- `status` is `fallback` because the original baseline passed and the attributed call
+  reverted at the same pinned block;
 - `selectedCalldata` is byte-identical to `originalCalldata`; and
 - the original ends in `29`, the encoded argument to `strictPing(41)`.
 
-RPC and transport errors also select the original calldata. Record them as failed
-preflights, not evidence that the target is incompatible.
+RPC, HTTP, timeout, transport, and malformed-result errors return `status: "blocked"`
+and `selectedCalldata: null` under the default policy. Do not sign; record them as
+inconclusive infrastructure failures, not evidence that the target is incompatible.
 
 ## 5. Add preflight to the participant's transaction path
 
@@ -201,13 +206,17 @@ const prepared = await prepareAttributedCall({
   codes: [pilotBuilderCode],
 });
 
+if (prepared.status === "blocked") {
+  throw new Error(`preflight inconclusive: ${prepared.failureKind}`);
+}
+
 recordPilotPreflight({
   target: targetAddress,
   success: prepared.success,
   originalCalldata: prepared.originalCalldata,
   attributedCalldata: prepared.attributedCalldata,
   selectedCalldata: prepared.selectedCalldata,
-  error: prepared.error,
+  error: prepared.success ? undefined : prepared.error,
 });
 
 await existingTrustedSigner.sendTransaction({
@@ -276,8 +285,10 @@ not remove the check to make the command pass.
 
 ### `execution reverted`
 
-Confirm that `selectedCalldata` equals `originalCalldata`. Use the original or do not
-send. Never send the rejected attributed payload.
+Confirm that `status` is `fallback` and `selectedCalldata` equals `originalCalldata`.
+Use the original or do not send. Never send the rejected attributed payload. For RPC,
+HTTP, timeout, transport, or malformed-result errors, confirm `status` is `blocked` and
+do not sign any payload.
 
 ### Signer sends different calldata
 

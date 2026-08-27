@@ -10,7 +10,8 @@ This runbook separates two different artifacts that must not be conflated:
 The public addresses and transactions in `deployments/fuji.json` were deployed from
 source commit
 [`0c0665124ed8f1edc5372ed48c77a92a941d08be`](https://github.com/0xArayy/avax-impact/commit/0c0665124ed8f1edc5372ed48c77a92a941d08be).
-That source is now present in Git history and predates the recorded deployment.
+That source predates the recorded deployment and is preserved by annotated tag
+[`fuji-schema0-v0.1.0`](https://github.com/0xArayy/avax-impact/tree/fuji-schema0-v0.1.0).
 
 Run:
 
@@ -21,7 +22,7 @@ npm run verify:fuji
 
 `verify:fuji` first builds the current SDK/contracts, then the read-only verifier:
 
-1. confirms the recorded source commit exists;
+1. confirms the durable source tag resolves to the recorded commit;
 2. archives and rebuilds that exact commit with the recorded compiler settings;
 3. compares rebuilt and live Fuji runtime bytecode lengths and hashes;
 4. checks the chain ID and all deployment, registration, and demo receipts;
@@ -127,7 +128,8 @@ milestone until it is upgraded or a separate schema 1 sender is added.
 Do not overwrite the historical record without preserving its identity. A new manifest
 or versioned manifest should include:
 
-- exact reachable source commit and immutable source URL;
+- exact reachable source commit, immutable source URL, and deployment-specific annotated
+  tag;
 - UTC commit and deployment timestamps;
 - Solidity version, optimizer settings, runs, and EVM version;
 - every deployment/registration/demo transaction hash, receipt status, and block;

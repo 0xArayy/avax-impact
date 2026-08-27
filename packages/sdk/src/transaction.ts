@@ -3,7 +3,9 @@ import { assertAddress, assertHex, assertRpcQuantity } from "./hex.js";
 import { JsonRpcClient } from "./rpc.js";
 import type {
   Hex,
+  ConfirmedTransactionAnalysis,
   RpcTransaction,
+  RpcTransactionReceipt,
   TransactionAnalysis,
   TransactionFetchRequest,
 } from "./types.js";
@@ -66,6 +68,33 @@ export async function analyzeTransaction(
   return { ...fetched, attribution };
 }
 
+export async function analyzeConfirmedTransaction(
+  request: TransactionFetchRequest,
+): Promise<ConfirmedTransactionAnalysis> {
+  const analysis = await analyzeTransaction(request);
+  if (analysis.transaction.blockNumber === null) {
+    throw new Error(`transaction is pending: ${request.transactionHash}`);
+  }
+  const client = new JsonRpcClient({ url: request.rpcUrl, timeoutMs: request.timeoutMs });
+  const receiptValue = await client.request<unknown>(
+    "eth_getTransactionReceipt",
+    [request.transactionHash],
+    { timeoutMs: request.timeoutMs, signal: request.signal },
+  );
+  if (receiptValue === null) throw new Error(`transaction receipt not found: ${request.transactionHash}`);
+  const receipt = parseReceipt(receiptValue);
+  if (receipt.transactionHash.toLowerCase() !== request.transactionHash.toLowerCase()) {
+    throw new Error("RPC receipt hash does not match the requested hash");
+  }
+  if (receipt.blockNumber.toLowerCase() !== analysis.transaction.blockNumber.toLowerCase()) {
+    throw new Error("RPC receipt block does not match the transaction block");
+  }
+  if (BigInt(receipt.status) !== 1n) {
+    throw new Error(`transaction execution failed: ${request.transactionHash}`);
+  }
+  return { ...analysis, receipt };
+}
+
 function parseChainId(value: unknown): number {
   if (typeof value !== "string") throw new Error("eth_chainId result must be a string");
   assertRpcQuantity(value, "eth_chainId result");
@@ -110,6 +139,28 @@ function parseTransaction(value: unknown): RpcTransaction {
     value: amount,
     blockNumber: blockNumberValue,
   };
+}
+
+function parseReceipt(value: unknown): RpcTransactionReceipt {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("transaction receipt must be an object");
+  }
+  const transactionHash = requiredReceiptString(value, "transactionHash");
+  const blockNumber = requiredReceiptString(value, "blockNumber");
+  const status = requiredReceiptString(value, "status");
+  assertTransactionHash(transactionHash);
+  assertRpcQuantity(blockNumber, "receipt blockNumber");
+  assertRpcQuantity(status, "receipt status");
+  if (BigInt(status) !== 0n && BigInt(status) !== 1n) {
+    throw new Error("receipt status must be 0x0 or 0x1");
+  }
+  return { transactionHash, blockNumber, status };
+}
+
+function requiredReceiptString(value: object, key: string): string {
+  const candidate = (value as Record<string, unknown>)[key];
+  if (typeof candidate !== "string") throw new Error(`receipt ${key} must be a string`);
+  return candidate;
 }
 
 function requiredString(value: object, key: string): string {

@@ -90,8 +90,9 @@ frequency, and consequence.
 Ask permission to show the product. Then explain only this:
 
 > AVAX Impact appends a public builder-code declaration to ordinary EVM calldata. It
-> simulates the exact attributed call first and selects the untouched original calldata
-> on failure. The code is copyable and proves declaration, not identity or authorization.
+> pins one block, requires the original call to succeed, and compares original and
+> attributed return data. It selects the tested original only when policy permits. The
+> code is copyable and proves declaration, not identity or authorization.
 
 Use the [live Fuji workbench](https://avax-impact.0xarayy.workers.dev) to inspect the
 historical schema 0 sample and run both compatible and strict preflight paths.
@@ -220,7 +221,7 @@ Use one record per attempt. Publish only fields allowed by the consent record.
 - First attempt completed without maintainer pairing: yes | no
 - Maintainer help after first attempt, minutes:
 - Engineering time, minutes:
-- Result: passed | failed | abandoned | safe fallback
+- Result: matched | original selected | blocked | abandoned
 - Failure or abandonment reason:
 
 ## Environment
@@ -308,7 +309,7 @@ Publish aggregates with denominators and missed thresholds:
 - Individual integrations passed: N / attempts
 - Median and range of engineering minutes:
 - Confirmed attributed Fuji transactions: N
-- Safe fallbacks: N / preflights
+- Baseline-verified original selections: N / preflights
 - Silent selection mismatches: N
 - Independent analyst reproduction: pass | fail | not attempted
 - Schema 0 legacy transactions: N

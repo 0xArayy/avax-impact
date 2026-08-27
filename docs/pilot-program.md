@@ -49,7 +49,7 @@ pilot or integration.
 | Surface | Available now | What it proves | What it does not prove |
 | --- | --- | --- | --- |
 | Historical Fuji transaction | Legacy schema 0 declaration and legacy AVAX Impact registry lookup | The recorded source, transaction, suffix, and registry record can be independently reproduced | ERC-8021 schema 1 interoperability or third-party adoption |
-| Exact-call preflight | Schema 0 attributed payload tested with `eth_call`; original calldata selected on failure | The selected payload follows the SDK's point-in-time compatibility result | Later inclusion, semantic equivalence under changed state, or universal compatibility |
+| Pinned-block preflight | Original and schema 0 attributed payloads are called with identical context at one pinned block; fallback is available only when the original succeeds and the attributed call reverts | Matching return data or a baseline-verified fallback at that block | Equal state effects, later inclusion, semantic equivalence under changed state, or universal compatibility |
 | Local schema 1 implementation | Codec, vectors, CLI, and pinned `ICodeRegistry` reader are tested locally | Behavior against draft commit `457532f5c064a4619868ee5e4950f0cc32a7917e` | A schema 1 Fuji deployment, Avalanche endorsement, or a finalized ERC |
 | Future schema 1 Fuji proof | Not delivered | Nothing may be claimed yet | It must not be inferred from the legacy address or transaction |
 
@@ -76,15 +76,15 @@ both the compatible and strict preflight paths.
 
 The participant adds `prepareAttributedCall` to its own transaction-building path,
 supplies the real `from`, `to`, `value`, and calldata, and hands only
-`selectedCalldata` to its existing trusted signer. AVAX Impact must never receive the
-key or seed phrase.
+non-null `selectedCalldata` to its existing trusted signer. A `blocked` result must stop
+the handoff. AVAX Impact must never receive the key or seed phrase.
 
 ### 4. Confirmation and independent recovery
 
 After a successful Fuji receipt, decode the transaction from a chain-checked RPC. A
 different person should recover the declared code and original calldata using the CLI
 or public workbench. Confirmation requires a non-null block and successful receipt;
-`decode-tx` alone does not check receipt status.
+use `decode-tx --confirmed`; plain `decode-tx` is inspection-only.
 
 ### 5. Feedback and evidence decision
 
@@ -101,8 +101,9 @@ An external pilot passes only when all of these are true:
 1. A qualified participant completed discovery before the product demonstration.
 2. The participant completed the first public-doc attempt without maintainer pairing;
    any later help and its duration are recorded.
-3. The compatible sample selected attributed calldata and the strict sample selected the
-   byte-identical original calldata.
+3. The compatible sample produced equal original/attributed return data and selected
+   attributed calldata; the strict sample first passed its original baseline and then
+   selected byte-identical original calldata after the attributed call reverted.
 4. The participant integrated into a transaction path it operates without modifying the
    target contract, deploying a routing proxy, or forking a wallet.
 5. The integration supplied the real simulation context for every field relevant to
@@ -126,15 +127,17 @@ These are targets, not current achievements:
 - at least 3 teams agree to a technical pilot;
 - 2 independent teams pass the individual integration gate;
 - at least 50 confirmed attributed Fuji transactions across those two pilots;
-- zero cases where attributed calldata is selected after exact simulation fails; and
+- zero cases where attributed calldata is selected after baseline failure, attributed
+  call failure, or a return-data mismatch; and
 - one independent analyst reproduces the published pilot count from public chain data.
 
 ## Fallback and stop criteria
 
 | Observation | Required action | Result classification |
 | --- | --- | --- |
-| `eth_call` rejects or errors | Use the byte-identical original calldata, or do not send | Safe fallback; record target and error class |
-| RPC is unavailable or malformed | Treat preflight as failed; do not infer compatibility | Infrastructure fallback |
+| Original `eth_call` succeeds and attributed `eth_call` returns a recognized execution revert at the same block | Use the byte-identical tested original under `revert-only`, or do not send | Baseline-verified fallback; record target and error class |
+| Original call fails or successful calls return different data | Select nothing and investigate | Compatibility blocked |
+| RPC is unavailable, times out, or is malformed | Keep the default `blocked` result; do not sign or infer compatibility | Infrastructure block |
 | Successful simulation changes expected semantics | Stop attribution for that target and investigate | Incompatible until explained |
 | Signer or wallet changes `selectedCalldata` | Stop and record the integration as blocked | Wallet-path incompatibility |
 | Integration requires target changes, proxy routing, custody, or a wallet fork | Stop the pilot path | Adoption threshold failed |

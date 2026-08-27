@@ -89,7 +89,8 @@ use transaction attribution.
 
 The repository contains a public historical Fuji deployment manifest, a legacy onchain
 registry entry, a confirmed schema 0 attributed demo transaction, an RPC decoder, and a
-live public inspection/preflight workbench. The source commit `0c066512…` is restored and
+live public inspection/preflight workbench. The source commit `0c066512…` is restored,
+preserved by annotated tag `fuji-schema0-v0.1.0`, and
 `npm run verify:fuji` rebuilds it before checking live bytecode, receipts, registry state,
 and transaction decoding. These prove ability to deliver a prototype path. They do not
 prove demand or a conformant schema 1 Fuji deployment:
@@ -114,7 +115,7 @@ in this repository as of 2026-08-26. A public grant application must not imply o
 | Dune Avalanche data | C-Chain datasets | Only if inferred or supplied in data | No native origin standard | Not applicable | No | Flexible analysis after the fact; cannot infer which of several frontends prepared an identical call. |
 | Base Builder Codes | Base-first product | Yes | ERC-8021 | Base docs state existing contracts work automatically; they do not document an exact-call fallback on the overview page | ERC-721 code plus payout/offchain metadata | Closest validated product, but its registration, dashboard, discovery, and reward surfaces are Base-specific. |
 | Custom project suffix or backend analytics | Whatever the project builds | Yes, within that project | No | Project-dependent | Project-dependent | Fragmented decoding and weak independent reproducibility. |
-| **AVAX Impact** | **Avalanche C-Chain/Fuji prototype; EVM Avalanche L1-capable SDK** | **Declared attribution** | **Pinned draft schema 1 locally; legacy schema 0 on Fuji** | **Exact `eth_call`; fall back to original calldata** | **Pinned resolver locally; legacy AVAX Impact registry on Fuji** | **Unaudited and unpublished, with no external adopters; no conformant schema 1 Fuji deploy; codes are public and copyable.** |
+| **AVAX Impact** | **Avalanche C-Chain/Fuji prototype; EVM Avalanche L1-capable SDK** | **Declared attribution** | **Pinned draft schema 1 locally; legacy schema 0 on Fuji** | **Pinned-block original/attributed comparison; baseline-verified fallback** | **Pinned resolver locally; legacy AVAX Impact registry on Fuji** | **Unaudited and unpublished, with no external adopters; no conformant schema 1 Fuji deploy; codes are public and copyable.** |
 
 “Declared attribution” is intentional. The suffix is not signed by the builder and must
 not be used as authorization or as an automatic payment oracle.
@@ -128,8 +129,10 @@ Avalanche bundle:
 1. **Avalanche-native evidence path.** Local conformant components, a clearly labeled
    legacy Fuji proof, automated provenance verification, decoder, and planned pilots are
    scoped to Avalanche C-Chain.
-2. **Execution compatibility gate.** The SDK simulates the exact attributed payload and
-   returns the original calldata on error or revert.
+2. **Execution compatibility gate.** The SDK pins one block, requires the original call
+   to succeed, compares original/attributed return data, returns the tested original only
+   for a recognized attributed-only revert by default, and blocks mismatches or
+   infrastructure failures.
 3. **A negative test is part of the product.** The Fuji deployment includes a strict
    contract that deliberately rejects trailing calldata, making the fallback behavior
    reproducible rather than theoretical.
@@ -149,7 +152,7 @@ All numbers in this section are future thresholds, not achieved metrics.
 | --- | --- | --- | --- |
 | H1: origin attribution is a painful job for Avalanche transaction builders | Interview 10 qualified C-Chain app, wallet, or agent teams; ask about current evidence workflow before showing the product | At least 5 describe the origin gap unprompted or show a manual workaround, and at least 3 agree to a technical pilot | Fewer than 3 rank it among their top three analytics/reporting problems, or no team will test it |
 | H2: integration is small enough to adopt | Give the SDK and integration guide to design partners without pairing on the first attempt | Two teams produce a valid attributed Fuji transaction within one engineering day each | Neither of two teams can integrate without modifying a target contract, wallet fork, or routing proxy |
-| H3: compatibility fallback is trustworthy | Run a published corpus of representative calls against at least five commonly integrated C-Chain protocols/contracts, including strict calldata cases | Every test records attributed success or explicit fallback before signing; zero silent selection mismatches | Any broadcast uses attributed calldata after the exact simulation rejected it, or semantic behavior differs despite successful simulation |
+| H3: compatibility evidence is trustworthy | Run a published corpus of representative calls against at least five commonly integrated C-Chain protocols/contracts, including strict calldata and different-return cases | Every test pins a block, proves the original baseline, records matching return data or explicit fallback, and produces zero silent selections | Any broadcast uses attributed calldata after comparison blocks it, or state effects differ despite matching return data |
 | H4: the signal is useful downstream | Provide an open index export/API to pilot teams and one independent analyst or program operator | Two pilots can reconcile their own confirmed transactions and one downstream consumer reproduces the counts | Consumers still require private session logs to identify origin, or reject declared attribution as too spoofable for their stated use |
 | H5: draft-standard risk is manageable | Track ERC-8021 changes and publish versioned fixtures/migration notes | Current decoder remains pinned to `457532f5…`, passes cross-implementation fixtures, and can migrate without ambiguous decoding | The upstream format changes in a way that requires ambiguous decoding or unsafe payload handling |
 

@@ -32,7 +32,7 @@ export function DecoderDemo() {
         <h1>Know what the transaction <em>declares</em> before you trust it.</h1>
         <div className="hero__footer">
           <p>
-            Inspect AVAX Impact attribution and preflight the exact attributed call—using the shared SDK,
+            Inspect AVAX Impact attribution and compare original and attributed calls—using the shared SDK,
             a pinned Fuji network, and no signing surface.
           </p>
           <div className="hero__provenance" aria-label="Workbench guarantees">

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AVAX Impact — Attribution Readiness Workbench",
   description:
-    "Inspect declared attribution and preflight exact attributed calls on Avalanche Fuji, without a wallet or private keys.",
+    "Inspect declared attribution and compare original and attributed calls on Avalanche Fuji, without a wallet or private keys.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

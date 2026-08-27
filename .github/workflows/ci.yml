@@ -25,9 +25,11 @@ jobs:
       - run: npm ci
       - run: npm audit --audit-level=high
       - run: npm run test:sdk
+      - run: npm run verify:package
       - run: forge fmt --check
       - run: forge test -vvv
       - run: bash -n scripts/*.sh
+      - run: node --check scripts/*.mjs
       - run: npm ci
         working-directory: demo
       - run: npm audit --audit-level=high
@@ -55,3 +57,4 @@ jobs:
       - name: Fetch deployment source commit
         run: git fetch origin "$(jq -r .sourceCommit deployments/fuji.json)"
       - run: npm run verify:fuji
+      - run: npm run verify:compatibility

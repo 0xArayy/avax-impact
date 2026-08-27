@@ -9,8 +9,12 @@ The workbench has two production paths:
 - **Inspect:** a Fuji C-Chain transaction hash through the SDK's
   `analyzeTransaction`, or raw attributed calldata decoded locally by the same SDK.
 - **Preflight:** the SDK's `prepareAttributedCall` appends schema 0 attribution and
-  runs the exact attributed payload through `eth_call`. If the target rejects trailing
-  calldata, the UI exposes the untouched original calldata as the safe fallback.
+  compares the original and attributed payloads with the same call context at one
+  pinned block. Matching return data is point-in-time compatibility evidence. If the
+  original succeeds and the attributed call returns a recognized execution revert, the
+  UI exposes the byte-identical original calldata as the policy-controlled fallback.
+  A failed baseline, changed return data, or RPC/infrastructure failure blocks handoff
+  and exposes no selected calldata.
 
 Schema 0 is explicitly presented as the current **legacy wire-format prototype**.
 Builder codes are resolved through the AVAX Impact Fuji extension
@@ -37,7 +41,8 @@ npm test
 ```
 
 `npm test` creates a production build, runs render checks, and tests validation,
-chain-provenance, pending-block, and safe-fallback presentation logic.
+chain provenance, pending-block, baseline comparison, fallback, and blocked-result
+presentation logic.
 
 ## Cloudflare deployment
 

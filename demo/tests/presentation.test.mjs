@@ -54,15 +54,27 @@ test("parses bounded lowercase builder codes", () => {
   assert.match(parseBuilderCodes("a,b,c,d,e").error, /one and four/);
 });
 
-test("presents safe fallback as the selected original payload", () => {
+test("presents compatibility, fallback, and blocked outcomes without safety overclaim", () => {
   const fallback = describePreflight({
     success: false,
+    status: "fallback",
     originalCalldata: "0x1234",
     selectedCalldata: "0x1234",
   });
   assert.equal(fallback.tone, "warning");
-  assert.equal(fallback.title, "Safe fallback selected");
-  assert.match(fallback.detail, /untouched original calldata/);
+  assert.equal(fallback.title, "Original calldata selected");
+  assert.match(fallback.detail, /original call succeeded/);
+
+  const blocked = describePreflight({
+    success: false,
+    status: "blocked",
+    originalCalldata: "0x1234",
+    selectedCalldata: null,
+    failureKind: "transport",
+    failedStage: "attributed-call",
+  });
+  assert.equal(blocked.tone, "error");
+  assert.match(blocked.title, /blocked/);
 
   const compatible = describePreflight({
     success: true,
@@ -70,7 +82,18 @@ test("presents safe fallback as the selected original payload", () => {
     selectedCalldata: "0x123400",
   });
   assert.equal(compatible.tone, "success");
-  assert.match(compatible.detail, /external signer/);
+  assert.match(compatible.detail, /point-in-time compatibility evidence/);
+
+  const mismatch = describePreflight({
+    success: false,
+    status: "blocked",
+    originalCalldata: "0x1234",
+    selectedCalldata: null,
+    failureKind: "return-data-mismatch",
+    failedStage: "comparison",
+  });
+  assert.equal(mismatch.title, "Return data changed");
+  assert.match(mismatch.detail, /No calldata was selected/);
 });
 
 test("never invents Fuji provenance for raw calldata", () => {

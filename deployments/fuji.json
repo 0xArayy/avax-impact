@@ -5,6 +5,8 @@
   "deployedAt": "2026-08-20T20:47:01Z",
   "sourceCommit": "0c0665124ed8f1edc5372ed48c77a92a941d08be",
   "sourceUrl": "https://github.com/0xArayy/avax-impact/commit/0c0665124ed8f1edc5372ed48c77a92a941d08be",
+  "sourceTag": "fuji-schema0-v0.1.0",
+  "sourceTagUrl": "https://github.com/0xArayy/avax-impact/tree/fuji-schema0-v0.1.0",
   "sourceCommittedAt": "2026-08-20T20:45:41Z",
   "compiler": {
     "version": "0.8.24",
@@ -73,9 +75,9 @@
   },
   "verification": {
     "verifiedAt": "2026-08-20T20:48:20Z",
-    "reverifiedAt": "2026-08-27T08:05:43Z",
+    "reverifiedAt": "2026-08-27T21:37:22Z",
     "command": "npm run verify:fuji",
-    "method": "Source commit availability, exact compiler settings, Avalanche Fuji JSON-RPC runtime bytecode hashes, receipts, legacy registry resolve, calldata decode, and strict-calldata original-success/attributed-revert checks",
+    "method": "Durable source tag and commit availability, exact compiler settings, Avalanche Fuji JSON-RPC runtime bytecode hashes, receipts, legacy registry resolve, calldata decode, and strict-calldata original-success/attributed-revert checks",
     "registryConformance": "legacy AVAX Impact API; the deployed registry predates the pinned ICodeRegistry ABI",
     "attributionFormat": "ERC-8021 schema-0 wire-format prototype; no canonical Avalanche schema-0 registry is claimed"
   }
