@@ -24,7 +24,7 @@ AVAX Impact contributes a missing origin dimension that can be decoded from the 
 transaction data. It should complement, not duplicate, Builder Hub, Explorer, Dune, or
 other indexers.
 
-The official Avalanche grant curriculum asks applicants to demonstrate ecosystem fit,
+The official Avalanche grant curriculum evaluates ecosystem fit,
 ability to deliver, community traction, and long-term impact
 ([Successful Grant Applications](https://build.avax.network/academy/entrepreneur/fundraising-finance/10-grants/02-success-criteria)).
 The current Fuji proof satisfies only part of “ability to deliver.” The next product

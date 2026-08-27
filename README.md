@@ -161,7 +161,7 @@ docs/            Format, operations, audit, validation, and grant material
 - [Fuji verification and deployment runbook](docs/fuji-runbook.md)
 - [Current acceptance matrix](docs/acceptance-matrix.md)
 - [Technical audit](docs/technical-audit.md)
-- [Grant application draft](docs/grant-application.md)
+- [Grant project narrative](docs/grant-application.md)
 - [Market validation plan](docs/market-validation.md)
 - [Product direction](docs/product-direction.md)
 

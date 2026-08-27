@@ -137,8 +137,8 @@ certification.
 The manifest records a successful networked re-verification on the assessment date. The
 same `npm run verify:fuji` command passed against the public Fuji RPC in this assessment:
 historical source reproduction, three live bytecode comparisons, five receipts, the
-legacy registry record, and the attributed transaction all agreed. Grant submission
-should rerun it to detect later RPC availability or chain drift.
+legacy registry record, and the attributed transaction all agreed. The scheduled verifier
+detects later RPC availability or chain drift.
 
 ## Local conformance versus deployed prototype
 
@@ -176,7 +176,7 @@ should rerun it to detect later RPC availability or chain drift.
 
 These are not hidden release failures. They define the requested grant work and its
 falsifiable acceptance gates. See [the acceptance matrix](acceptance-matrix.md) and
-[grant application](grant-application.md).
+[grant project narrative](grant-application.md).
 
 ## Grant-ready recommendation
 

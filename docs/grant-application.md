@@ -1,9 +1,7 @@
-# AVAX Impact: Team1 Mini Grant application draft
+# AVAX Impact: Team1 Mini Grant project narrative
 
 Prepared: **2026-08-27**. External market sources were accessed on 2026-08-26. This is
-a public, submission-ready content draft. Applicant identity, contact, legal
-acknowledgements, and payout details must be completed by the applicant in the official
-form.
+a public, evidence-backed project narrative.
 
 ## Application facts
 
@@ -18,9 +16,6 @@ form.
 | Code | <https://github.com/0xArayy/avax-impact> |
 | Live demo | <https://avax-impact.0xarayy.workers.dev> |
 | License | MIT |
-| Applicant / team | **[Applicant to complete]** |
-| Contact and Team1 profile | **[Applicant to complete]** |
-| Grant payout address | **[Applicant to provide a dedicated address; do not assume the Fuji deployer address]** |
 
 The official Team1 site lists Mini Grants as an open application for early-stage builders
 and community initiatives, with funding up to $10,000 as of 2026-08-26
@@ -233,7 +228,7 @@ This application addresses those criteria with:
 - a line-item budget and rejection contingency;
 - public evidence for both achieved and missed results.
 
-## Statements the applicant must not make without new evidence
+## Unsupported claims
 
 - “AVAX Impact has users,” “partners,” or “traction.”
 - “Avalanche Foundation, Ava Labs, or Team1 will use the data.”
@@ -246,20 +241,6 @@ This application addresses those criteria with:
 - “The project will increase transactions, TVL, revenue, or users by a forecast number.”
 
 Replace a statement only after linking public evidence.
-
-## Submission checklist
-
-- [ ] Applicant name, biography, contact, team roles, and prior work completed.
-- [ ] Dedicated grant payout address and any tax/KYC information completed privately in
-  the official form; no private data committed here.
-- [ ] Requested amount and timeline match the live Team1 form.
-- [ ] Repository and demo are public and healthy at submission time.
-- [ ] Current test counts and deployment links rechecked against the current commit.
-- [ ] Any post-2026-08-26 external interviews or integrations added with evidence.
-- [ ] Team1 program terms, reporting requirements, and permitted budget categories
-  confirmed directly with the program.
-- [ ] No “partner,” endorsement, audit, adoption, or finalized-standard claim added
-  without proof.
 
 ## Sources
 
