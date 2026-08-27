@@ -2,7 +2,7 @@ import { sites } from "@openai/sites-vite-plugin";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import vinext from "vinext";
 import { defineConfig } from "vite";
-import hostingConfig from "./.openai/hosting.json";
+import hostingConfig from "./.openai/hosting.json" with { type: "json" };
 import { cdnAdapter } from "@vinext/cloudflare/cache/cdn-adapter";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
@@ -15,7 +15,6 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 
 const localBindingConfig = {
   main: "./worker/index.ts",
-  compatibility_flags: ["nodejs_compat"],
   d1_databases: d1
     ? [
         {

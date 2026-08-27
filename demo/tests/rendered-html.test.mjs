@@ -22,16 +22,19 @@ async function render() {
   );
 }
 
-test("renders the AVAX Impact decoder experience", async () => {
+test("renders the AVAX Impact attribution readiness workbench", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>AVAX Impact — Builder Attribution for Avalanche<\/title>/i);
-  assert.match(html, /See who built/);
-  assert.match(html, /Decode attribution/);
-  assert.match(html, /Live on Avalanche Fuji/);
-  assert.match(html, /Metadata, not authorization/);
+  assert.match(html, /<title>AVAX Impact — Attribution Readiness Workbench<\/title>/i);
+  assert.match(html, /Know what the transaction/);
+  assert.match(html, /Read the attribution trail/);
+  assert.match(html, /Simulate before any signature/);
+  assert.match(html, /Legacy wire prototype/i);
+  assert.match(html, /Metadata, never authorization/i);
+  assert.match(html, /zero private keys/i);
+  assert.doesNotMatch(html, /connect wallet|private key input/i);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/);
 });

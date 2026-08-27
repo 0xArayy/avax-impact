@@ -13,22 +13,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AVAX Impact — Builder Attribution for Avalanche",
+  title: "AVAX Impact — Attribution Readiness Workbench",
   description:
-    "An open, ERC-8021-compatible builder-attribution layer for Avalanche C-Chain and EVM-based Avalanche L1s.",
+    "Inspect declared attribution and preflight exact attributed calls on Avalanche Fuji, without a wallet or private keys.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
   },
   openGraph: {
-    title: "AVAX Impact",
-    description: "See which builder generated an Avalanche transaction.",
+    title: "AVAX Impact — Attribution Readiness Workbench",
+    description: "Inspect and preflight AVAX Impact attribution on Avalanche Fuji.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AVAX Impact",
-    description: "See which builder generated an Avalanche transaction.",
+    title: "AVAX Impact — Attribution Readiness Workbench",
+    description: "Inspect and preflight AVAX Impact attribution on Avalanche Fuji.",
   },
 };
 

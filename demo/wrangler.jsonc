@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "avax-impact",
   "account_id": "501403d9ff295f8e50a5b9fc76174a45",
-  "compatibility_date": "2026-08-21",
+  "compatibility_date": "2026-05-22",
   "compatibility_flags": [
     "nodejs_compat"
   ],
