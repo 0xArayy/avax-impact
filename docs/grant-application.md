@@ -1,8 +1,9 @@
 # AVAX Impact: Team1 Mini Grant application draft
 
-Prepared: **2026-08-26**. This is a public, submission-ready content draft. Applicant
-identity, contact, legal acknowledgements, and payout details must be completed by the
-applicant in the official form.
+Prepared: **2026-08-27**. External market sources were accessed on 2026-08-26. This is
+a public, submission-ready content draft. Applicant identity, contact, legal
+acknowledgements, and payout details must be completed by the applicant in the official
+form.
 
 ## Application facts
 
@@ -42,11 +43,11 @@ the builder code through an explicitly selected registry.
 The local MVP includes schema 0 and pinned schema 1 codecs, a Solidity registry that
 implements the pinned `ICodeRegistry` read ABI, a TypeScript SDK and CLI, exact
 `eth_call` simulation with fallback to original calldata, automated tests, and a live
-public decoder. The existing Fuji contracts and confirmed attributed transaction are an
-earlier schema 0 wire-format prototype with AVAX Impact's legacy registry, not a
-canonical or interoperable registry deployment. Grant funding will first close that
-deployment gap, then build a reproducible C-Chain data export and two external Fuji
-design-partner pilots.
+public inspection/preflight workbench. The existing Fuji contracts and confirmed
+attributed transaction are an earlier schema 0 wire-format prototype with AVAX Impact's
+legacy registry, not a canonical or interoperable registry deployment. Grant funding
+will first close that deployment gap, then build a reproducible C-Chain data export and
+two external Fuji design-partner pilots.
 
 Attribution is a public declaration, not a signature. AVAX Impact will not use it for
 authorization or automatic reward payments.
@@ -134,7 +135,7 @@ Public work completed before grant approval:
   [Fuji manifest](../deployments/fuji.json), and `npm run verify:fuji`, which rebuilds
   that source and checks live bytecode, receipts, legacy registry state, and the demo
   transaction;
-- live public decoder.
+- live public inspection/preflight workbench.
 
 The contracts have not received an external security audit. The package has not been
 published to npm. No third-party integration, mainnet transaction, active user count, or

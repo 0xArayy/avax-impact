@@ -89,13 +89,13 @@ use transaction attribution.
 
 The repository contains a public historical Fuji deployment manifest, a legacy onchain
 registry entry, a confirmed schema 0 attributed demo transaction, an RPC decoder, and a
-live public decoder. The source commit `0c066512…` is restored and `npm run verify:fuji`
-rebuilds it before checking live bytecode, receipts, registry state, and transaction
-decoding. These prove ability to deliver a prototype path. They do not prove demand or a
-conformant schema 1 Fuji deployment:
+live public inspection/preflight workbench. The source commit `0c066512…` is restored and
+`npm run verify:fuji` rebuilds it before checking live bytecode, receipts, registry state,
+and transaction decoding. These prove ability to deliver a prototype path. They do not
+prove demand or a conformant schema 1 Fuji deployment:
 
 - public repository: <https://github.com/0xArayy/avax-impact>;
-- live Fuji decoder: <https://avax-impact.0xarayy.workers.dev>;
+- live Fuji workbench: <https://avax-impact.0xarayy.workers.dev>;
 - attributed Fuji transaction:
   <https://testnet.snowtrace.io/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821>;
 - reproducible public evidence: [`deployments/fuji.json`](../deployments/fuji.json).

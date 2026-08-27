@@ -92,7 +92,7 @@ Evidence already in the repository:
 - public legacy schema 0 Fuji contracts, AVAX Impact registry entry, and confirmed
   attributed transaction;
 - restored deployment source provenance plus automated rebuild/live verification;
-- live public decoder and automated Solidity/TypeScript tests.
+- live public inspection/preflight workbench and automated Solidity/TypeScript tests.
 
 The local schema 1 codec and registry candidate conform to the pinned draft surfaces.
 The existing Fuji deployment does not: it remains schema 0 plus the legacy AVAX Impact

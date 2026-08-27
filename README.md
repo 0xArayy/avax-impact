@@ -12,7 +12,7 @@ without changing the target function ABI. The SDK can simulate the exact attribu
 call, fall back to the original calldata, fetch and decode transactions, and resolve a
 registry record.
 
-[Try the live Fuji transaction decoder](https://avax-impact.0xarayy.workers.dev).
+[Open the live Fuji attribution workbench](https://avax-impact.0xarayy.workers.dev).
 
 ## Standards status
 
@@ -135,7 +135,7 @@ attributed transaction. It requires outbound access to the configured `FUJI_RPC_
 ```text
 contracts/       Registry, demo contracts, Foundry tests, deployment scripts
 packages/sdk/    TypeScript library, CLI, and tests
-demo/            Public transaction and calldata decoder
+demo/            Public attribution inspection and preflight workbench
 scripts/         Fuji deployment, demo flow, and read-only verification
 deployments/     Public deployment manifests
 docs/            Format, operations, audit, validation, and grant material
