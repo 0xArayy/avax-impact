@@ -95,27 +95,29 @@ historical Fuji bytecode.
 
 ## Browser acceptance
 
-The earlier single-attributed-call workbench was exercised through a real Chromium
-session against the local dev server and public Fuji RPC on 2026-08-27. This caught a browser-only unbound
-`fetch` failure that Node mocks did not expose; the RPC client now binds the host fetch
-implementation and includes a regression test. The complete browser round was then
-restarted and passed:
+The pinned-block dual-call workbench was deployed from commit `eb04c39` on 2026-08-28
+as Cloudflare Worker version `03c7fcba-13b0-4d49-83d6-316dec6658ef`. A gstack v1.71
+Chromium session then exercised the production URL and public Fuji RPC:
 
 - the recorded Fuji transaction decoded to `avax-impact`, block `57,881,798`, and the
   active legacy owner/payout/metadata record;
 - the pinned schema 1 fixture decoded locally and reported registry chain `8453` rather
   than inventing Fuji provenance;
-- the compatible Fuji registry call retained attributed calldata;
-- the live strict-calldata contract rejected the suffix and the UI selected the
-  byte-identical original `strictPing(41)` calldata;
-- desktop and 390×844 layouts rendered without horizontal control overflow, and the
-  browser console contained no application errors after the fixed rerun.
+- the compatible Fuji registry call pinned block `0x3755a9a`, displayed identical
+  return data, and retained attributed calldata;
+- the live strict-calldata contract passed its original baseline, rejected the suffix,
+  and selected the exact 36-byte original `strictPing(41)` calldata;
+- every observed page/static/RPC request completed successfully, and the browser console
+  contained no application errors;
+- 1280×720 and 390×844 full-page layouts rendered correctly; the mobile document and
+  viewport widths were both 390 pixels, proving no page-level horizontal overflow.
 
-The current pinned-block dual-call version has 10 passing strict-sample,
+The same version has 10 passing strict-sample,
 sample-recovery, validation, comparison-presentation, provenance, fallback,
-pending-state, SSR, and production-handler tests. Its production redeploy/browser round
-is still pending. This is functional evidence, not a formal WCAG or third-party
-usability certification.
+pending-state, SSR, and production-handler tests. This is functional evidence, not a
+formal WCAG or third-party usability certification. An earlier browser pass also caught
+an unbound host-`fetch` issue that Node mocks missed; the RPC client fix remains covered
+by a regression test.
 
 ## Deployment provenance and automatic verification
 
