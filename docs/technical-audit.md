@@ -106,9 +106,10 @@ restarted and passed:
 - desktop and 390×844 layouts rendered without horizontal control overflow, and the
   browser console contained no application errors after the fixed rerun.
 
-The demo additionally has 9 passing strict-sample, sample-recovery, validation, presentation, provenance,
-fallback, pending-state, and SSR tests. This is strong functional evidence, not a formal WCAG or
-third-party usability certification.
+The demo additionally has 10 passing strict-sample, sample-recovery, validation,
+presentation, provenance, fallback, pending-state, SSR, and production-handler tests.
+This is strong functional evidence, not a formal WCAG or third-party usability
+certification.
 
 ## Deployment provenance and automatic verification
 

@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-async function render() {
+async function loadWorker() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
+  return (await import(workerUrl.href)).default;
+}
+
+async function render() {
+  const worker = await loadWorker();
 
   return worker.fetch(
     new Request("http://localhost/", {
@@ -37,4 +41,29 @@ test("renders the AVAX Impact attribution readiness workbench", async () => {
   assert.match(html, /zero private keys/i);
   assert.doesNotMatch(html, /connect wallet|private key input/i);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/);
+});
+
+test("production image route does not require an unused Cloudflare Images binding", async () => {
+  const worker = await loadWorker();
+  const response = await worker.fetch(
+    new Request(
+      "http://localhost/_vinext/image?url=%2Ffavicon.svg&w=640&q=75",
+    ),
+    {
+      ASSETS: {
+        fetch: async () =>
+          new Response("<svg/>", {
+            status: 200,
+            headers: { "content-type": "image/svg+xml" },
+          }),
+      },
+    },
+    {
+      waitUntil() {},
+      passThroughOnException() {},
+    },
+  );
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), "http://localhost/favicon.svg");
 });
