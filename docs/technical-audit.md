@@ -61,7 +61,7 @@ Local commands run on 2026-08-27:
 
 | Command | Observed result |
 | --- | --- |
-| `npm run test:sdk` | PASS: 33 tests, 0 failed/skipped |
+| `npm run test:sdk` | PASS: 36 tests, 0 failed/skipped |
 | `npm run test:contracts` | PASS: 18 tests, 0 failed/skipped, including 256-run fuzz cases |
 | `npm run check` | PASS: core suites, demo build/tests/lint, Solidity format, and shell syntax |
 | `npm audit --audit-level=high` (root and `demo`) | PASS: 0 known vulnerabilities in both lock-file graphs |

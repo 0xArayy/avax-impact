@@ -12,7 +12,7 @@ import {
   resolveLegacyBuilder,
   validateBuilderCode,
 } from "./index.js";
-import { assertHex } from "./hex.js";
+import { assertHex, assertRpcQuantity } from "./hex.js";
 import type { Hex } from "./types.js";
 
 async function main(): Promise<void> {
@@ -87,17 +87,15 @@ async function main(): Promise<void> {
     case "preflight": {
       const registryAddress = optionalHexOption(args, "--registry");
       const registryChainIdValue = optionalOption(args, "--registry-chain-id");
+      const from = optionalHexOption(args, "--from");
+      const value = optionalRpcQuantityOption(args, "--value");
       printJson(await prepareAttributedCall({
         rpcUrl: requireOption(args, "--rpc"),
         to: requireHexOption(args, "--to"),
         calldata: requireHexOption(args, "--calldata"),
         codes: requireOptions(args, "--code"),
-        ...(optionalHexOption(args, "--from") === undefined
-          ? {}
-          : { from: optionalHexOption(args, "--from") }),
-        ...(optionalHexOption(args, "--value") === undefined
-          ? {}
-          : { value: optionalHexOption(args, "--value") }),
+        ...(from === undefined ? {} : { from }),
+        ...(value === undefined ? {} : { value }),
         ...(registryAddress === undefined ? {} : { registryAddress }),
         ...(registryChainIdValue === undefined
           ? {}
@@ -159,6 +157,13 @@ function optionalHexOption(args: readonly string[], name: string): Hex | undefin
   const value = optionalOption(args, name);
   if (value === undefined) return undefined;
   assertHex(value, name);
+  return value;
+}
+
+function optionalRpcQuantityOption(args: readonly string[], name: string): Hex | undefined {
+  const value = optionalOption(args, name);
+  if (value === undefined) return undefined;
+  assertRpcQuantity(value, name);
   return value;
 }
 

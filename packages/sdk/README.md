@@ -135,7 +135,7 @@ reader and accepts `--kind legacy` only for the historical AVAX Impact registry.
 npm run test:sdk
 ```
 
-Verified locally on 2026-08-27: 33 tests pass, covering schema 0/schema 1 codec rules,
+Verified locally on 2026-08-27: 36 tests pass, covering schema 0/schema 1 codec rules,
 conformance vectors, dry-run fallback, JSON-RPC validation, transaction fetch/decode,
 the pinned registry ABI, the legacy registry resolver, and CLI workflows.
 

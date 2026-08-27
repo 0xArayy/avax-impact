@@ -61,17 +61,26 @@ that the registered builder created or authorized the transaction.
 
 ## Quick start
 
-Requirements: Node.js 22+, npm, and Foundry.
+Requirements: Node.js 22.13+, npm, and Foundry (CI pins Forge 1.2.3).
 
 ```bash
-npm install
-npm test
-# Repository-wide build/test/lint/format/shell gate:
+npm ci
+npm --prefix demo ci
 npm run check
 ```
 
-Verified locally on 2026-08-27: 33 SDK tests and 18 Solidity tests pass. Demo tests are
-maintained separately, run by `npm run check`, and are not included in that count.
+The root workspace and web app intentionally use separate lockfiles; both install
+commands are required on a clean checkout. `npm run check` is the repository-wide
+build/test/lint/format/shell gate. It currently runs 36 SDK tests, 18 Solidity tests,
+and 10 demo tests.
+
+Start the workbench locally after the gate passes:
+
+```bash
+npm --prefix demo run dev
+```
+
+Open the local URL printed by the development server.
 
 ## SDK
 
@@ -164,6 +173,9 @@ docs/            Format, operations, audit, validation, and grant material
 - [Grant project narrative](docs/grant-application.md)
 - [Market validation plan](docs/market-validation.md)
 - [Product direction](docs/product-direction.md)
+- [Design-partner pilot program](docs/pilot-program.md)
+- [Copy-paste Fuji pilot flow](docs/pilot-technical-flow.md)
+- [Pilot discovery and evidence field guide](docs/pilot-field-guide.md)
 
 ## License
 
