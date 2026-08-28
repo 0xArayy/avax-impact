@@ -73,7 +73,7 @@ export function DecoderDemo() {
       </section>
 
       <footer className="shell">
-        <div><span className="brand-mark" aria-hidden="true">A</span><span>AVAX Impact · open attribution infrastructure</span></div>
+        <div><span className="brand-mark" aria-hidden="true">A</span><span className="footer-disclaimer">Independent open-source project · not an official Avalanche service</span></div>
         <p>Live Fuji evidence · No wallet connection · No transaction submission</p>
         <a href={REPOSITORY_URL} target="_blank" rel="noreferrer">GitHub ↗</a>
       </footer>

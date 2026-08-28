@@ -6,13 +6,16 @@ import { describeChainContext, formatBlockNumber, validateCalldata, validateTran
 import {
   inspectFujiTransaction,
   inspectRawCalldata,
+  resolveFujiRegistryCodes,
   resolveHistoricalCodes,
   SAMPLE_CALLDATA,
   SAMPLE_TRANSACTION,
+  type FujiRegistryResolutionResult,
   type InspectResult,
   type LegacyResolutionResult,
 } from "@/lib/workbench";
 import { LegacyResolution } from "./LegacyResolution";
+import { CurrentRegistryResolution } from "./CurrentRegistryResolution";
 import { HexField, ProvenanceLabel } from "./WorkbenchBits";
 
 type InputMode = "transaction" | "calldata";
@@ -29,6 +32,8 @@ export function InspectPanel() {
   const [state, setState] = useState<InspectState>({ status: "idle" });
   const [legacyResults, setLegacyResults] = useState<readonly LegacyResolutionResult[]>([]);
   const [legacyLoading, setLegacyLoading] = useState(false);
+  const [currentResults, setCurrentResults] = useState<readonly FujiRegistryResolutionResult[]>([]);
+  const [currentLoading, setCurrentLoading] = useState(false);
   const requestRef = useRef<AbortController | null>(null);
 
   function switchMode(nextMode: InputMode) {
@@ -36,6 +41,7 @@ export function InspectPanel() {
     setMode(nextMode);
     setState({ status: "idle" });
     setLegacyResults([]);
+    setCurrentResults([]);
   }
 
   async function inspect() {
@@ -52,6 +58,8 @@ export function InspectPanel() {
     setState({ status: "loading" });
     setLegacyResults([]);
     setLegacyLoading(false);
+    setCurrentResults([]);
+    setCurrentLoading(false);
     try {
       const result = mode === "transaction"
         ? await inspectFujiTransaction(value as Hex, controller.signal)
@@ -64,12 +72,20 @@ export function InspectPanel() {
         const resolutions = await resolveHistoricalCodes(result.analysis.declaration, controller.signal);
         if (!controller.signal.aborted) setLegacyResults(resolutions);
       }
+      if (result.analysis.status === "declared" && result.analysis.declaration.schemaId === 1) {
+        setCurrentLoading(true);
+        const resolutions = await resolveFujiRegistryCodes(result.analysis.declaration, controller.signal);
+        if (!controller.signal.aborted) setCurrentResults(resolutions);
+      }
     } catch (error) {
       if (!controller.signal.aborted) {
         setState({ status: "error", message: error instanceof Error ? error.message : "Inspection failed." });
       }
     } finally {
-      if (!controller.signal.aborted) setLegacyLoading(false);
+      if (!controller.signal.aborted) {
+        setLegacyLoading(false);
+        setCurrentLoading(false);
+      }
     }
   }
 
@@ -126,6 +142,14 @@ export function InspectPanel() {
         {state.status === "error" ? <div className="message-state message-state--error"><strong>Inspection stopped</strong><p>{state.message}</p></div> : null}
         {result ? <InspectionResult result={result} /> : null}
       </div>
+
+      {result?.analysis.status === "declared" && result.analysis.declaration.schemaId === 1 ? (
+        <CurrentRegistryResolution
+          declaration={result.analysis.declaration}
+          loading={currentLoading}
+          results={currentResults}
+        />
+      ) : null}
 
       {result?.analysis.status === "declared" && result.analysis.declaration.schemaId === 0 ? (
         <LegacyResolution loading={legacyLoading} results={legacyResults} />

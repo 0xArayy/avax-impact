@@ -87,19 +87,19 @@ use transaction attribution.
 
 ### Evidence already produced by this project
 
-The repository contains a public historical Fuji deployment manifest, a legacy onchain
-registry entry, a confirmed schema 0 attributed demo transaction, an RPC decoder, and a
-live public inspection/preflight workbench. The source commit `0c066512…` is restored,
-preserved by annotated tag `fuji-schema0-v0.1.0`, and
-`npm run verify:fuji` rebuilds it before checking live bytecode, receipts, registry state,
-and transaction decoding. These prove ability to deliver a prototype path. They do not
-prove demand or a conformant schema 1 Fuji deployment:
+The repository contains a public schema 1 Fuji registry and demo deployment, a confirmed
+attributed transaction, an RPC decoder, a multi-protocol compatibility corpus, and a
+live inspection/preflight workbench. Source commit `4f5318e…` is preserved by annotated
+tag `fuji-schema1-v0.1.0`; `npm run verify:fuji:schema1` rebuilds it before checking live
+bytecode, receipts, registry state, transaction decoding, and the strict negative path.
+These prove implementation and reproducibility, not demand or adoption:
 
 - public repository: <https://github.com/0xArayy/avax-impact>;
 - live Fuji workbench: <https://avax-impact.0xarayy.workers.dev>;
 - attributed Fuji transaction:
-  <https://testnet.snowtrace.io/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821>;
-- reproducible public evidence: [`deployments/fuji.json`](../deployments/fuji.json).
+  <https://testnet.snowtrace.io/tx/0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530>;
+- reproducible public evidence:
+  [`deployments/fuji-schema1.json`](../deployments/fuji-schema1.json).
 
 ### Evidence not yet available
 
@@ -115,7 +115,7 @@ in this repository as of 2026-08-26. A public grant application must not imply o
 | Dune Avalanche data | C-Chain datasets | Only if inferred or supplied in data | No native origin standard | Not applicable | No | Flexible analysis after the fact; cannot infer which of several frontends prepared an identical call. |
 | Base Builder Codes | Base-first product | Yes | ERC-8021 | Base docs state existing contracts work automatically; they do not document an exact-call fallback on the overview page | ERC-721 code plus payout/offchain metadata | Closest validated product, but its registration, dashboard, discovery, and reward surfaces are Base-specific. |
 | Custom project suffix or backend analytics | Whatever the project builds | Yes, within that project | No | Project-dependent | Project-dependent | Fragmented decoding and weak independent reproducibility. |
-| **AVAX Impact** | **Avalanche C-Chain/Fuji prototype; EVM Avalanche L1-capable SDK** | **Declared attribution** | **Pinned draft schema 1 locally; legacy schema 0 on Fuji** | **Pinned-block original/attributed comparison; baseline-verified fallback** | **Pinned resolver locally; legacy AVAX Impact registry on Fuji** | **Unaudited and unpublished, with no external adopters; no conformant schema 1 Fuji deploy; codes are public and copyable.** |
+| **Builder Attribution SDK** | **Avalanche C-Chain/Fuji prototype; EVM Avalanche L1-capable SDK** | **Declared attribution** | **Pinned draft schema 1 on public Fuji** | **Pinned-block original/attributed comparison; baseline-verified fallback; five external contract probes** | **Deployed standard resolver with owner-asserted payout and URI** | **Unaudited and not published to npm, with no external adopters; codes are public and copyable.** |
 
 “Declared attribution” is intentional. The suffix is not signed by the builder and must
 not be used as authorization or as an automatic payment oracle.
@@ -126,9 +126,9 @@ The wedge is not a new general-purpose analytics platform and not a claim to hav
 invented transaction attribution. It is the evaluated combination of a safety-first
 Avalanche bundle:
 
-1. **Avalanche-native evidence path.** Local conformant components, a clearly labeled
-   legacy Fuji proof, automated provenance verification, decoder, and planned pilots are
-   scoped to Avalanche C-Chain.
+1. **Avalanche-native evidence path.** A public schema 1 Fuji deployment, external
+   compatibility probes, automated provenance verification, decoder, and planned pilots
+   are scoped to Avalanche C-Chain; historical evidence is isolated.
 2. **Execution compatibility gate.** The SDK pins one block, requires the original call
    to succeed, compares original/attributed return data, returns the tested original only
    for a recognized attributed-only revert by default, and blocks mismatches or

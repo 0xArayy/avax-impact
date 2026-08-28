@@ -62,6 +62,19 @@ if [[ "$(jq -r '.status' <<<"$preflight_json")" != "attributed" ]]; then
   exit 1
 fi
 
+block_tag="$(jq -er '.blockTag' <<<"$preflight_json")"
+registry_json="$(node packages/sdk/dist/src/cli.js resolve \
+  --rpc "$FUJI_RPC_URL" \
+  --registry "$REGISTRY_ADDRESS" \
+  --code "$BUILDER_CODE" \
+  --block-tag "$block_tag")"
+
+if ! jq -e '.status == "registered" and .record.valid == true' <<<"$registry_json" >/dev/null; then
+  echo "Refusing to sign: builder code is not registered and valid at preflight block $block_tag." >&2
+  jq '{status, record}' <<<"$registry_json" >&2
+  exit 1
+fi
+
 attributed_calldata="$(jq -er '.selectedCalldata' <<<"$preflight_json")"
 
 cast send "$ATTRIBUTION_DEMO_ADDRESS" "$attributed_calldata" \

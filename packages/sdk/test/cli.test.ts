@@ -45,7 +45,29 @@ test("CLI exposes the complete read-only and preflight workflow", () => {
   const output = execFileSync(process.execPath, [cli.pathname, "--help"], { encoding: "utf8" });
   assert.match(output, /decode-tx/);
   assert.match(output, /resolve/);
+  assert.match(output, /resolve .*--block-tag 0x/);
   assert.match(output, /preflight/);
+});
+
+test("CLI rejects malformed registry-resolution block tags before RPC", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      cli.pathname,
+      "resolve",
+      "--rpc",
+      "https://rpc.example.test",
+      "--registry",
+      "0x1111111111111111111111111111111111111111",
+      "--code",
+      "avax-impact",
+      "--block-tag",
+      "42",
+    ],
+    { encoding: "utf8" },
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /canonical non-negative JSON-RPC quantity/);
 });
 
 test("CLI emits JSON-safe schema-one output pinned to Avalanche registry context", () => {

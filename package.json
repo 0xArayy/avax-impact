@@ -12,6 +12,9 @@
     "test:contracts": "forge test --offline",
     "test:sdk": "npm run test --workspace @avax-impact/sdk",
     "verify:fuji": "npm run build && node scripts/verify-fuji.mjs",
+    "verify:fuji:schema1": "npm run build && node scripts/verify-fuji-schema1.mjs",
+    "verify:fuji:all": "npm run build && node scripts/verify-fuji.mjs && node scripts/verify-fuji-schema1.mjs",
+    "verify:deployment-sources": "npm run build && node scripts/verify-deployment-sources.mjs",
     "verify:compatibility": "npm run build --workspace @avax-impact/sdk && node scripts/verify-compatibility.mjs",
     "verify:package": "bash scripts/verify-package.sh",
     "format:contracts": "forge fmt --check"

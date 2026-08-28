@@ -10,7 +10,7 @@ a public, evidence-backed project narrative.
 | Project | AVAX Impact |
 | Category | Avalanche developer infrastructure / analytics primitive |
 | Network scope | Avalanche C-Chain and Fuji only during the grant |
-| Stage | Working local schema 0/schema 1 implementation plus a public legacy schema 0 Fuji prototype; no documented external adopters yet |
+| Stage | Working schema 1 SDK, public pinned-ABI Fuji deployment, live workbench, and external-contract compatibility corpus; no documented adopters yet |
 | Requested amount | **USD 10,000** |
 | Delivery period | **10 weeks from grant start** |
 | Code | <https://github.com/0xArayy/avax-impact> |
@@ -23,9 +23,9 @@ and community initiatives, with funding up to $10,000 as of 2026-08-26
 
 ## One-line pitch
 
-AVAX Impact is a safety-first Avalanche attribution bundle implementing ERC-8021 draft
-commit `457532f5…` locally, with typed preflight outcomes and an existing schema 0 Fuji
-prototype.
+AVAX Impact is a safety-first Avalanche attribution SDK implementing pinned ERC-8021
+draft commit `457532f5…`, backed by reproducible schema 1 Fuji evidence and typed
+transaction-preflight outcomes.
 
 ## Short project summary
 
@@ -35,16 +35,15 @@ generally tell which app, wallet, bot, or agent prepared an otherwise identical 
 AVAX Impact adds that missing origin signal as a compact calldata suffix and can resolve
 the builder code through an explicitly selected registry.
 
-The local MVP includes schema 0 and pinned schema 1 codecs, a Solidity registry that
+The developer candidate includes a schema 1 codec, a deployed Solidity registry that
 implements the pinned `ICodeRegistry` read ABI, a TypeScript SDK and CLI, exact
 same-block original/attributed `eth_call` comparison with explicit baseline-verified
 fallback, confirmed-receipt analysis,
 automated tests, and a live
-public inspection/preflight workbench. The existing Fuji contracts and confirmed
-attributed transaction are an earlier schema 0 wire-format prototype with AVAX Impact's
-legacy registry, not a canonical or interoperable registry deployment. Grant funding
-will first validate demand and secure design-partner commitments. A reproducible release,
-pilots, and the smallest required data export follow only if that gate passes.
+public inspection/preflight workbench. The current Fuji contracts, registry record, and
+confirmed schema 1 transaction are tied to immutable source and a live verifier. Grant
+funding will first validate demand and secure design-partner commitments. External
+pilots and the smallest required data export follow only if that gate passes.
 
 Attribution is a public declaration, not a signature. AVAX Impact will not use it for
 authorization or automatic reward payments.
@@ -97,10 +96,10 @@ Custom backend analytics is not independently recoverable from the confirmed tra
 
 AVAX Impact's evaluated, safety-first Avalanche bundle is:
 
-- locally conformant schema 1 codec and `ICodeRegistry` resolver work, with an explicit
-  grant milestone for a new conformant Fuji proof;
-- a historical schema 0 Fuji deployment with restored, automatically verifiable
-  provenance;
+- schema 1 codec and a live pinned-ABI Fuji registry with reproducible source, bytecode,
+  receipt, registry, and confirmed-transaction checks;
+- isolated historical schema 0 evidence that cannot be selected implicitly by default
+  preparation APIs;
 - a pinned-block comparison that requires the original call to succeed and original and
   attributed return data to match before attributed handoff;
 - deterministic fallback to the already-tested original calldata on a recognized
@@ -120,23 +119,24 @@ rather than claim final-standard compliance.
 
 Public work completed before grant approval:
 
-- local schema 0 and pinned schema 1 codecs plus a local `ICodeRegistry`-conformant
-  registry candidate;
-- legacy Fuji `BuilderRegistry`, `AttributionDemo`, and `StrictCalldataDemo` deployments;
-- registered `avax-impact` builder code in that legacy registry;
-- confirmed schema 0 attributed Fuji transaction
-  [`0x33c0…0821`](https://testnet.snowtrace.io/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821);
+- pinned schema 1 codec and deployed Fuji registry implementing the selected
+  `ICodeRegistry` read ABI;
+- current Fuji `BuilderRegistry`, `AttributionDemo`, and `StrictCalldataDemo` deployments;
+- registered `avax-impact` builder code in that registry;
+- confirmed schema 1 attributed Fuji transaction
+  [`0x2e82…3530`](https://build.avax.network/explorer/fuji/c-chain/tx/0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530);
 - TypeScript encoder, decoder, validator, CLI, RPC decoder, transaction analyzer, and
   canonical/legacy registry readers;
 - same-block dual-call comparison with typed attributed/fallback/blocked outcomes;
 - successful-receipt transaction analysis and ERC-5792 `dataSuffix` wallet handoff;
 - two-step registry ownership transfer and public security/governance/release processes;
 - automated Solidity and TypeScript tests;
-- restored deployment source commit `0c066512…`, annotated tag
-  `fuji-schema0-v0.1.0`, public
-  [Fuji manifest](../deployments/fuji.json), and `npm run verify:fuji`, which rebuilds
-  that source and checks live bytecode, receipts, legacy registry state, and the demo
-  transaction;
+- deployment source commit `4f5318e…`, annotated tag `fuji-schema1-v0.1.0`, public
+  [schema 1 manifest](../deployments/fuji-schema1.json), and
+  `npm run verify:fuji:schema1`, which rebuilds source and checks live bytecode,
+  receipts, pinned registry reads, the confirmed transaction, and strict negative path;
+- live C-Chain compatibility checks against Aave V3, LFJ, Circle USDC, BENQI, and
+  Chainlink, including a blocked baseline with no selected calldata;
 - live public inspection/preflight workbench.
 
 The contracts have not received an external security audit. The package has not been
@@ -150,7 +150,7 @@ All adoption numbers below are targets, not current traction.
 | Milestone | Due | Public acceptance criteria | Budget |
 | --- | --- | --- | ---: |
 | 1. Demand validation and commitments | End of week 2 | 10 qualified problem interviews completed before a product demo; current workarounds and downstream consumer documented; at least 3 written pilot commitments with named integration owners; anonymized positive and negative findings; explicit go/narrow/stop decision | $1,000 |
-| 2. Conformant Fuji developer release | End of week 5, only if Milestone 1 passes | Published package and immutable release; pinned fixtures; newly deployed and read-only-verified `ICodeRegistry`-conformant Fuji registry; confirmed schema 1 transaction; Viem/Wagmi, backend, and ERC-5792 recipes; two independent developers complete the quickstart; accepted and strict-rejection compatibility cases | $3,000 |
+| 2. Independent developer release | End of week 5, only if Milestone 1 passes | Published npm package and immutable release built from the already verified schema 1 Fuji candidate; Viem/Wagmi, backend, and ERC-5792 recipes; two independent developers complete the quickstart; their friction and timing are published | $3,000 |
 | 3. External pilots and minimal evidence export | End of week 8 | Two external Fuji integrations; at least 50 confirmed attributed pilot transactions total; published integration time, blocked/fallback cases, and consented hashes; smallest reproducible JSON/CSV/API surface required by pilots; one independent downstream user reproduces a published count | $3,500 |
 | 4. Review, remediation, and public report | End of week 10 | Targeted independent review of registry/decoder/fallback boundaries; high-severity findings resolved before mainnet recommendation; final report publishes achieved and missed targets, spend, unresolved risks, maintenance owner, and next-chain decision | $2,500 |
 | **Total** |  |  | **$10,000** |
@@ -234,7 +234,7 @@ copyable declarations.
 | ERC-8021 draft changes | Keep the exact `457532f5…` pin in artifacts and fixtures; follow the [upstream risk policy](upstream-risk.md) and publish a migration decision before supporting another revision or schema |
 | Indexer duplicates existing Avalanche infrastructure | Do not build it before the demand gate; afterward use Builder Hub/Data API-compatible exports and keep the origin decoder thin |
 | Security review finds a high-severity issue | Pause mainnet recommendation, remediate, and publish the finding and fix |
-| Grant is not awarded | Continue maintaining the existing Fuji MVP; reduce scope to interviews and developer release; do not block already-public work on funding |
+| Grant is not awarded | Continue maintaining the existing schema 1 Fuji candidate; reduce scope to interviews and the npm release; do not block already-public work on funding |
 
 ## Alignment with published Avalanche review guidance
 

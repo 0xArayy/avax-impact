@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
+import { decodeAttribution } from "@avax-impact/sdk";
 
 test("builds a stable static Cloudflare application shell", async () => {
   const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
@@ -18,11 +19,19 @@ test("keeps schema 1 as the visible default and isolates historical evidence", a
   const source = await readFile(new URL("../app/DecoderDemo.tsx", import.meta.url), "utf8");
   assert.match(source, /Default format/);
   assert.match(source, /Schema 1 · pinned ERC-8021 draft/);
+  assert.match(source, /Independent open-source project · not an official Avalanche service/);
+  const inspectPanel = await readFile(new URL("../app/InspectPanel.tsx", import.meta.url), "utf8");
+  assert.match(inspectPanel, /CurrentRegistryResolution/);
   assert.doesNotMatch(source, /Schema 0 status|Legacy wire prototype|Fuji prototype/);
 
   const historical = await readFile(new URL("../app/LegacyResolution.tsx", import.meta.url), "utf8");
   assert.match(historical, /<details/);
   assert.match(historical, /Historical schema 0 evidence/);
+
+  const current = await readFile(new URL("../app/CurrentRegistryResolution.tsx", import.meta.url), "utf8");
+  assert.match(current, /Current schema 1 registry/);
+  assert.match(current, /Declared schema 1 registry/);
+  assert.match(current, /Verify current registry on Fuji/);
 });
 
 test("uses stable Vite and static Cloudflare Assets without beta runtime packages", async () => {
@@ -36,4 +45,25 @@ test("uses stable Vite and static Cloudflare Assets without beta runtime package
   assert.match(wrangler, /"directory": "\.\/dist"/);
   assert.match(wrangler, /"not_found_handling": "single-page-application"/);
   assert.doesNotMatch(wrangler, /"main"/);
+});
+
+test("keeps the default workbench sample aligned with verified schema 1 evidence", async () => {
+  const workbench = await readFile(new URL("../lib/workbench.ts", import.meta.url), "utf8");
+  const manifest = JSON.parse(
+    await readFile(new URL("../../deployments/fuji-schema1.json", import.meta.url), "utf8"),
+  );
+  const sampleCalldata = workbench.match(/export const SAMPLE_CALLDATA =\s*\n\s*"(0x[0-9a-f]+)"/)?.[1];
+  const sampleTransaction = workbench.match(/export const SAMPLE_TRANSACTION =\s*\n\s*"(0x[0-9a-f]+)"/)?.[1];
+  assert.ok(sampleCalldata);
+  assert.equal(sampleTransaction, manifest.transactions.attributedPing.hash);
+
+  const declaration = decodeAttribution(sampleCalldata);
+  assert.equal(declaration.schemaId, 1);
+  assert.equal(declaration.registryAddress?.toLowerCase(), manifest.contracts.builderRegistry.toLowerCase());
+  assert.equal(declaration.registryChainId, BigInt(manifest.chainId));
+  assert.deepEqual(declaration.codes, [manifest.builder.code]);
+  assert.equal(
+    declaration.originalCalldata,
+    "0x773acdef0000000000000000000000000000000000000000000000000000000000000029",
+  );
 });

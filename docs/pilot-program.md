@@ -48,15 +48,16 @@ pilot or integration.
 
 | Surface | Available now | What it proves | What it does not prove |
 | --- | --- | --- | --- |
-| Historical Fuji transaction | Legacy schema 0 declaration and legacy AVAX Impact registry lookup | The recorded source, transaction, suffix, and registry record can be independently reproduced | ERC-8021 schema 1 interoperability or third-party adoption |
-| Pinned-block preflight | Original and schema 0 attributed payloads are called with identical context at one pinned block; fallback is available only when the original succeeds and the attributed call reverts | Matching return data or a baseline-verified fallback at that block | Equal state effects, later inclusion, semantic equivalence under changed state, or universal compatibility |
-| Local schema 1 implementation | Codec, vectors, CLI, and pinned `ICodeRegistry` reader are tested locally | Behavior against draft commit `457532f5c064a4619868ee5e4950f0cc32a7917e` | A schema 1 Fuji deployment, Avalanche endorsement, or a finalized ERC |
-| Future schema 1 Fuji proof | Not delivered | Nothing may be claimed yet | It must not be inferred from the legacy address or transaction |
+| Current Fuji schema 1 transaction | Confirmed declaration embeds registry `0x9695…4653`, chain `43113`, and code `avax-impact`; source and runtime are independently checked | A reproducible implementation against draft commit `457532f5…` and the deployed standard registry read ABI | Avalanche endorsement, finalized ERC status, authenticated authorship, or third-party adoption |
+| Pinned-block preflight | Original and schema 1 attributed payloads are called with identical context at one pinned block; fallback is available only when the original succeeds and the attributed call reverts | Matching return data or a baseline-verified fallback at that block | Equal state effects, later inclusion, semantic equivalence under changed state, or universal compatibility |
+| SDK and registry implementation | Codec, vectors, CLI, pinned `ICodeRegistry` reader, deployed registry, and live verifier are tested | Behavior and live bytecode against the pinned draft revision | A canonical Avalanche registry, audit assurance, or a finalized ERC |
+| Historical schema 0 proof | Reproducible through a separate tag, manifest, verifier, CLI commands, and package subpath | Continuity of the earlier prototype | Current default behavior or schema 1 registry interoperability |
 
-The existing Fuji registry at
-`0x8f13a300f2773EB6fa071B9196f6e16129F2549F` is legacy. Do not use it as a schema 1
-registry address. A schema 1 Fuji result counts only after a new conformant registry,
-confirmed transaction, versioned manifest, and read-only verifier are public.
+The old Fuji registry at `0x8f13a300f2773EB6fa071B9196f6e16129F2549F` is historical.
+The current schema 1 address is `0x96951d7e43812474Bb4AF211dcCAd13080D44653`;
+its confirmed transaction, versioned manifest, immutable source tag, and read-only
+verifier are public. Pilot participation and adoption remain unproven until an external
+team completes the flow.
 
 ## Pilot stages
 

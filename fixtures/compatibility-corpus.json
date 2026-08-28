@@ -1,40 +1,158 @@
 {
-  "version": 1,
-  "network": "Avalanche Fuji C-Chain",
-  "chainId": 43113,
-  "purpose": "First-party engineering regression corpus; not evidence of external protocol compatibility or adoption",
+  "version": 2,
+  "purpose": "Live engineering compatibility corpus; protocol inclusion is not adoption evidence",
+  "registry": {
+    "address": "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
+    "chainId": 43113
+  },
+  "networks": {
+    "fuji": {
+      "name": "Avalanche Fuji C-Chain",
+      "chainId": 43113,
+      "rpcUrl": "https://api.avax-test.network/ext/bc/C/rpc"
+    },
+    "c-chain": {
+      "name": "Avalanche C-Chain",
+      "chainId": 43114,
+      "rpcUrl": "https://api.avax.network/ext/bc/C/rpc"
+    }
+  },
   "cases": [
     {
-      "id": "legacy-registry-read",
+      "id": "schema1-registry-read",
       "classification": "first-party-standard-abi",
-      "target": "0x8f13a300f2773EB6fa071B9196f6e16129F2549F",
+      "network": "fuji",
+      "protocol": "AVAX Impact",
+      "target": "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
       "calldata": "0x461a44780000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b617661782d696d70616374000000000000000000000000000000000000000000",
-      "codes": ["compat-corpus"],
+      "codes": ["avax-impact"],
+      "sourceUrl": "https://github.com/0xArayy/avax-impact/blob/main/deployments/fuji-schema1.json",
+      "representativeReason": "Reads the registered builder record through a standard Solidity ABI path.",
       "expected": {
         "status": "attributed",
         "compatibilityEvidence": "return-data-match"
       }
     },
     {
-      "id": "attribution-demo-ping",
+      "id": "schema1-attribution-demo-ping",
       "classification": "first-party-standard-abi",
-      "target": "0x4e0803c679Fff7F3781856b41C2A810E76c47200",
+      "network": "fuji",
+      "protocol": "AVAX Impact",
+      "target": "0xbDe66e5Ae9651C24173CC3DEFc5a4d5D7a186639",
       "calldata": "0x773acdef0000000000000000000000000000000000000000000000000000000000000029",
-      "codes": ["compat-corpus"],
+      "codes": ["avax-impact"],
+      "sourceUrl": "https://github.com/0xArayy/avax-impact/blob/main/deployments/fuji-schema1.json",
+      "representativeReason": "Positive control for a state-changing standard ABI function.",
       "expected": {
         "status": "attributed",
         "compatibilityEvidence": "return-data-match"
       }
     },
     {
-      "id": "strict-calldata-rejection",
+      "id": "schema1-strict-calldata-rejection",
       "classification": "first-party-strict-calldata",
-      "target": "0x854595b7260f1325f643dd732F926c6B5da3bf8E",
+      "network": "fuji",
+      "protocol": "AVAX Impact",
+      "target": "0x752495F1423edE0606329fCC7bFC0B18FE3DD005",
       "calldata": "0x56a316bb0000000000000000000000000000000000000000000000000000000000000029",
-      "codes": ["compat-corpus"],
+      "codes": ["avax-impact"],
+      "sourceUrl": "https://github.com/0xArayy/avax-impact/blob/main/contracts/src/AttributionDemo.sol",
+      "representativeReason": "Negative control that enforces exact calldata length.",
       "expected": {
         "status": "fallback",
-        "failureKind": "execution-reverted"
+        "failureKind": "execution-reverted",
+        "failedStage": "attributed-call"
+      }
+    },
+    {
+      "id": "aave-v3-reserve-list",
+      "classification": "external-protocol-read",
+      "network": "c-chain",
+      "protocol": "Aave V3",
+      "target": "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+      "calldata": "0xd1946dbc",
+      "codes": ["avax-impact"],
+      "sourceUrl": "https://github.com/aave-dao/aave-address-book/blob/main/src/AaveV3Avalanche.sol",
+      "representativeReason": "Canonical pool discovery read used by integrations to enumerate reserves.",
+      "expected": {
+        "status": "attributed",
+        "compatibilityEvidence": "return-data-match"
+      }
+    },
+    {
+      "id": "lfj-v22-pair-count",
+      "classification": "external-protocol-read",
+      "network": "c-chain",
+      "protocol": "LFJ Liquidity Book V2.2",
+      "target": "0xb43120c4745967fa9b93E79C149E66B0f2D6Fe0c",
+      "calldata": "0x4e937c3a",
+      "codes": ["avax-impact"],
+      "sourceUrl": "https://developers.lfj.gg/deployment-addresses/avalanche",
+      "representativeReason": "Factory pair-count read used before pair enumeration.",
+      "expected": {
+        "status": "attributed",
+        "compatibilityEvidence": "return-data-match"
+      }
+    },
+    {
+      "id": "circle-usdc-decimals",
+      "classification": "external-token-read",
+      "network": "c-chain",
+      "protocol": "Circle USDC",
+      "target": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+      "calldata": "0x313ce567",
+      "codes": ["avax-impact"],
+      "sourceUrl": "https://developers.circle.com/stablecoins/usdc-contract-addresses",
+      "representativeReason": "Standard token metadata read used for amount formatting.",
+      "expected": {
+        "status": "attributed",
+        "compatibilityEvidence": "return-data-match"
+      }
+    },
+    {
+      "id": "benqi-savax-total-supply",
+      "classification": "external-protocol-token-read",
+      "network": "c-chain",
+      "protocol": "BENQI Liquid Staking",
+      "target": "0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE",
+      "calldata": "0x18160ddd",
+      "codes": ["avax-impact"],
+      "sourceUrl": "https://docs.benqi.fi/resources/contracts",
+      "representativeReason": "Liquid-staking token supply read used by dashboards and integrations.",
+      "expected": {
+        "status": "attributed",
+        "compatibilityEvidence": "return-data-match"
+      }
+    },
+    {
+      "id": "chainlink-avax-usd-latest-round",
+      "classification": "external-oracle-read",
+      "network": "c-chain",
+      "protocol": "Chainlink AVAX/USD feed",
+      "target": "0x0A77230d17318075983913bC2145DB16C7366156",
+      "calldata": "0xfeaf968c",
+      "codes": ["avax-impact"],
+      "sourceUrl": "https://docs.chain.link/data-feeds/price-feeds/addresses?network=avalanche",
+      "representativeReason": "Latest-round oracle read used for live AVAX price data.",
+      "expected": {
+        "status": "attributed",
+        "compatibilityEvidence": "return-data-match"
+      }
+    },
+    {
+      "id": "aave-v3-borrow-without-collateral",
+      "classification": "external-protocol-baseline-block",
+      "network": "c-chain",
+      "protocol": "Aave V3",
+      "target": "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+      "calldata": "0xa415bcad000000000000000000000000b97ef9ef8734c71904d8002f8b6bc66dd9c48a6e000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000345b2def6c2b14b656dbe57d2de05976e386a2b3",
+      "codes": ["avax-impact"],
+      "sourceUrl": "https://github.com/aave-dao/aave-address-book/blob/main/src/AaveV3Avalanche.sol",
+      "representativeReason": "Safety control: a borrow without collateral must fail its untouched baseline and expose no sendable calldata.",
+      "expected": {
+        "status": "blocked",
+        "failureKind": "execution-reverted",
+        "failedStage": "original-call"
       }
     }
   ]

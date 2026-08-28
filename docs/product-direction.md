@@ -91,14 +91,15 @@ Evidence already in the repository:
 - builder registry and compatible/strict demo contracts;
 - TypeScript encoder, decoder, validator, CLI, and RPC transaction decoder;
 - pinned-block original/attributed comparison with baseline-verified fallback;
-- public legacy schema 0 Fuji contracts, AVAX Impact registry entry, and confirmed
-  attributed transaction;
-- restored deployment source provenance plus automated rebuild/live verification;
+- public schema 1 Fuji registry, compatible/strict demo contracts, and a confirmed
+  attributed transaction embedding registry address and chain ID;
+- immutable deployment source provenance plus automated rebuild/live verification for
+  both the current and historical generations;
 - live public inspection/preflight workbench and automated Solidity/TypeScript tests.
 
-The local schema 1 codec and registry candidate conform to the pinned draft surfaces.
-The existing Fuji deployment does not: it remains schema 0 plus the legacy AVAX Impact
-registry. This is prototype evidence, not traction.
+The default codec and deployed Fuji registry implement the pinned draft surfaces. A live
+external-contract compatibility corpus adds execution evidence. This is verified
+prototype evidence, not traction, audit assurance, or Avalanche endorsement.
 
 ### Phase 1: demand validation and design-partner commitments
 

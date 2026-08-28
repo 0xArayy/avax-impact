@@ -75,10 +75,12 @@ async function main(): Promise<void> {
       return;
     }
     case "resolve": {
+      const blockTag = optionalRpcQuantityOption(args, "--block-tag");
       const request = {
         rpcUrl: requireOption(args, "--rpc"),
         registryAddress: requireHexOption(args, "--registry"),
         code: requireOption(args, "--code"),
+        ...(blockTag === undefined ? {} : { blockTag }),
       };
       printJson(await resolveCodeRegistry(request));
       return;
@@ -204,7 +206,7 @@ Usage:
   avax-impact encode-legacy --calldata 0x... --code avax-impact
   avax-impact decode --calldata 0x...
   avax-impact decode-tx --rpc https://... --hash 0x... [--chain-id 43113] [--confirmed]
-  avax-impact resolve --rpc https://... --registry 0x... --code avax-impact
+  avax-impact resolve --rpc https://... --registry 0x... --code avax-impact [--block-tag 0x...]
   avax-impact resolve-legacy --rpc https://... --registry 0x... --code avax-impact
   avax-impact preflight --rpc https://... --to 0x... --calldata 0x... --code avax-impact --registry 0x... --registry-chain-id 43113 [--from 0x...] [--value 0x0] [--block-tag 0x...] [--fallback-policy revert-only|never]
   avax-impact validate --code avax-impact`);

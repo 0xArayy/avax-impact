@@ -95,7 +95,7 @@ Ask permission to show the product. Then explain only this:
 > code is copyable and proves declaration, not identity or authorization.
 
 Use the [live Fuji workbench](https://avax-impact.0xarayy.workers.dev) to inspect the
-historical schema 0 sample and run both compatible and strict preflight paths.
+confirmed schema 1 sample and run both compatible and strict preflight paths.
 
 Ask:
 
@@ -105,9 +105,10 @@ Ask:
 - Would you allocate up to one engineering day to an independent pilot? A polite yes to
   another conversation is not a pilot commitment.
 
-State explicitly that schema 1 is implemented locally against a pinned ERC-8021 draft,
-but no conformant schema 1 Fuji deployment exists yet. The visible transaction and
-legacy registry are schema 0 proof only.
+State explicitly that the visible Fuji transaction embeds the deployed standard
+registry address and chain ID under the pinned ERC-8021 draft. The draft is not a
+finalized ERC, the contracts are unaudited, and a public declaration is still copyable.
+Historical schema 0 evidence is available only as a separately labeled reproduction.
 
 ### 5. Close: 25 to 30 minutes
 
@@ -232,7 +233,7 @@ Use one record per attempt. Publish only fields allowed by the consent record.
 - Integration path: app | wallet | bot | agent | backend
 - Target class and public address, if consented:
 - Builder code is a public declaration, not identity: acknowledged | not acknowledged
-- Format: schema-0-legacy | schema-1-local-only
+- Format: schema-1-fuji | schema-0-historical
 
 ## Preflight
 
@@ -312,8 +313,8 @@ Publish aggregates with denominators and missed thresholds:
 - Baseline-verified original selections: N / preflights
 - Silent selection mismatches: N
 - Independent analyst reproduction: pass | fail | not attempted
-- Schema 0 legacy transactions: N
-- Schema 1 Fuji transactions: 0 until conformant deployment evidence exists
+- Schema 0 historical transactions: N
+- Schema 1 Fuji transactions: N
 - Negative interviews and abandoned attempts: N
 - Main falsifying evidence:
 ```

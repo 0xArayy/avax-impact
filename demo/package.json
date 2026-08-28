@@ -10,8 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test tests/*.test.mjs",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "test": "npm run typecheck && npm run build && node --test tests/*.test.mjs",
+    "lint": "eslint . --ignore-pattern dist",
     "deploy:cloudflare": "npm run build && wrangler deploy"
   },
   "dependencies": {

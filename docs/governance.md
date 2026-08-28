@@ -2,10 +2,10 @@
 
 ## Status
 
-The local `BuilderRegistry` is an unaudited candidate implementing the pinned
-`ICodeRegistry` read surface. It is not an Avalanche, Ava Labs, Foundation, or Team1
-canonical registry. The historical Fuji address is a legacy prototype with a different
-ABI.
+The Fuji `BuilderRegistry` at `0x96951d7e43812474Bb4AF211dcCAd13080D44653` is an
+unaudited project deployment implementing the pinned `ICodeRegistry` read surface. It
+is not an Avalanche, Ava Labs, Foundation, or Team1 canonical registry. The historical
+Fuji address is an isolated prototype with a different ABI.
 
 ## Code-name policy
 

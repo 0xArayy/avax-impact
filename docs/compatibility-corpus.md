@@ -1,34 +1,44 @@
 # Compatibility corpus
 
 The machine-readable corpus is
-[`fixtures/compatibility-corpus.json`](../fixtures/compatibility-corpus.json). Run it
-against Avalanche Fuji with:
+[`fixtures/compatibility-corpus.json`](../fixtures/compatibility-corpus.json).
 
 ```bash
 npm run verify:compatibility
 ```
 
-Each case uses `prepareAttributedCall`, pins a block, requires the original baseline,
-then either compares return data or records an attributed-only revert. The command exits
-nonzero when the live result differs from the manifest.
+Every case uses schema 1 and `prepareAttributedCall`. It pins one block per call,
+requires the untouched baseline, then compares return data or records the typed failure
+stage. Live drift exits nonzero.
+
+## Current coverage
+
+| Surface | Network | Call | Expected result |
+| --- | --- | --- | --- |
+| AVAX Impact registry | Fuji | builder record read | return-data match |
+| AVAX Impact demo | Fuji | `ping(41)` | return-data match |
+| AVAX Impact strict demo | Fuji | `strictPing(41)` | attributed-only revert, tested-original fallback |
+| Aave V3 Pool | C-Chain | reserve enumeration | return-data match |
+| LFJ Liquidity Book V2.2 | C-Chain | factory pair count | return-data match |
+| Circle USDC | C-Chain | token decimals | return-data match |
+| BENQI sAVAX | C-Chain | total supply | return-data match |
+| Chainlink AVAX/USD | C-Chain | latest round data | return-data match |
+| Aave V3 Pool | C-Chain | borrow without collateral | original baseline blocked; no selected calldata |
+
+Addresses are linked to official protocol documentation or maintained address books in
+the fixture. The Aave blocked case is a safety control, not a trailing-calldata
+incompatibility claim: the untouched call fails first, so the SDK correctly refuses to
+evaluate or expose an attributed transaction.
 
 ## Evidence boundary
 
-Version 1 contains three AVAX Impact-owned fixtures: two standard-ABI success paths and
-one deliberately strict rejection path. It is useful as an engineering regression gate.
-It is **not** evidence that third-party protocols are compatible, that state effects are
-equal, or that any external team adopted AVAX Impact.
+These are public read-only engineering checks. They do not prove:
 
-The market-validation H3 gate remains open until the corpus includes reproducible calls
-for at least five commonly integrated C-Chain protocol contracts, including a
-different-return or other blocked case. Every external entry must record:
+- that any protocol team reviewed, endorsed, or adopted AVAX Impact;
+- that all functions on the tested contracts accept suffixes;
+- that matching return data implies matching writes, logs, gas, or future execution;
+- that a passing call remains valid after contract upgrades or state changes.
 
-- protocol and contract identity, source URL, chain, target, original calldata, and call
-  context;
-- why the call is representative rather than selected for a favorable result;
-- the pinned block and both raw return values, or the attributed failure class;
-- the date, SDK version/commit, RPC chain ID, and consent if a partner supplied the call;
-- any known state-effect limitation that `eth_call` return comparison cannot observe.
-
-Failed and ambiguous cases stay in the published corpus. They are not deleted to improve
-the pass rate.
+Failed and ambiguous cases remain in the corpus. Scheduled CI repeats the checks so a
+protocol upgrade or RPC behavior change becomes visible rather than silently improving a
+marketing pass rate.
