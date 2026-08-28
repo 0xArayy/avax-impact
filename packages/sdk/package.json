@@ -1,6 +1,6 @@
 {
   "name": "@avax-impact/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Transaction attribution SDK for Avalanche, evaluated against a pinned ERC-8021 draft revision",
   "type": "module",
   "main": "./dist/src/index.js",

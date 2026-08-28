@@ -3,6 +3,13 @@
 This project follows semantic versioning after its first public release. Until 1.0,
 minor releases may contain breaking API or contract changes that are called out here.
 
+## 0.1.1 - 2026-08-29
+
+### Fixed
+
+- Install the pinned Solidity compiler before release checks so a clean GitHub Actions
+  runner can execute the offline contract and deployment-source verification gates.
+
 ## 0.1.0 - 2026-08-28
 
 ### Added

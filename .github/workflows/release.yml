@@ -32,6 +32,8 @@ jobs:
       - run: npm audit --audit-level=high
       - run: npm audit --audit-level=high
         working-directory: demo
+      - name: Install pinned Solidity compiler
+        run: forge build
       - run: npm run check
       - name: Verify immutable deployment sources offline
         run: npm run verify:deployment-sources
