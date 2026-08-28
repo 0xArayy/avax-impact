@@ -4,7 +4,9 @@ import { ProvenanceLabel } from "./WorkbenchBits";
 
 export function LegacyResolution({ loading, results }: { loading: boolean; results: readonly LegacyResolutionResult[] }) {
   return (
-    <section className="legacy-proof" aria-labelledby="legacy-proof-title">
+    <details className="legacy-proof">
+      <summary>Historical schema 0 evidence</summary>
+      <section aria-labelledby="legacy-proof-title">
       <div className="result-section-heading">
         <div>
           <p className="micro-label">FUJI REGISTRY LOOKUP</p>
@@ -36,9 +38,10 @@ export function LegacyResolution({ loading, results }: { loading: boolean; resul
           {item.error ? <p className="record-error">Registry proof could not be retrieved: {item.error}</p> : null}
         </article>
       ))}
-      <a className="text-link" href={`${FUJI.explorerUrl}/address/${FUJI.registryAddress}`} target="_blank" rel="noreferrer">
-        Pinned registry {shortenHex(FUJI.registryAddress)} <span aria-hidden="true">↗</span>
+      <a className="text-link" href={`${FUJI.explorerUrl}/address/${FUJI.historicalRegistryAddress}`} target="_blank" rel="noreferrer">
+        Historical registry {shortenHex(FUJI.historicalRegistryAddress)} <span aria-hidden="true">↗</span>
       </a>
-    </section>
+      </section>
+    </details>
   );
 }

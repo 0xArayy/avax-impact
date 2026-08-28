@@ -8,10 +8,14 @@ import {
 import type { Hex } from "../src/index.js";
 
 test("creates a required ERC-5792 dataSuffix capability", () => {
-  const capability = createDataSuffixCapability({ codes: ["avax-impact"] });
+  const capability = createDataSuffixCapability({
+    codes: ["avax-impact"],
+    registryAddress: "0x1111111111111111111111111111111111111111",
+    registryChainId: 43113n,
+  });
   assert.equal(capability.dataSuffix.optional, false);
   const declaration = decodeAttribution(`0x1234${capability.dataSuffix.value.slice(2)}` as Hex);
-  assert.equal(declaration.schemaId, 0);
+  assert.equal(declaration.schemaId, 1);
   assert.deepEqual(declaration.codes, ["avax-impact"]);
 });
 
@@ -27,14 +31,4 @@ test("encodes schema-one registry context for wallet_sendCalls", () => {
   assert.equal(declaration.schemaId, 1);
   assert.equal(declaration.registryChainId, 43113n);
   assert.deepEqual(declaration.codes, ["avax-impact", "partner"]);
-});
-
-test("rejects partial registry context", () => {
-  assert.throws(
-    () => createDataSuffixCapability({
-      codes: ["avax-impact"],
-      registryAddress: "0x1111111111111111111111111111111111111111",
-    }),
-    /must be provided together/,
-  );
 });

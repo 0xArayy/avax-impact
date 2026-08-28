@@ -4,15 +4,17 @@ import {
   analyzeTransaction,
   analyzeConfirmedTransaction,
   appendAttribution,
-  appendAttributionV1,
   decodeAttribution,
   encodeAttribution,
-  encodeAttributionV1,
   prepareAttributedCall,
   resolveCodeRegistry,
-  resolveLegacyBuilder,
   validateBuilderCode,
 } from "./index.js";
+import {
+  appendLegacyAttribution,
+  encodeLegacyAttribution,
+  resolveLegacyBuilder,
+} from "./legacy.js";
 import { assertHex, assertRpcQuantity } from "./hex.js";
 import type { Hex } from "./types.js";
 
@@ -27,28 +29,29 @@ async function main(): Promise<void> {
     case "encode": {
       const calldata = requireHexOption(args, "--calldata");
       const codes = requireOptions(args, "--code");
-      const registryAddress = optionalHexOption(args, "--registry");
-      const registryChainIdValue = optionalOption(args, "--registry-chain-id");
-      if ((registryAddress === undefined) !== (registryChainIdValue === undefined)) {
-        throw new Error("--registry and --registry-chain-id must be provided together");
-      }
-      if (registryAddress !== undefined && registryChainIdValue !== undefined) {
-        const registryChainId = parsePositiveBigInt(registryChainIdValue, "--registry-chain-id");
-        const declaration = { registryAddress, registryChainId, codes };
-        printJson({
-          format: "schema-1",
-          suffix: encodeAttributionV1(declaration),
-          calldata: appendAttributionV1(calldata, declaration),
-          codes,
-          registryAddress,
-          registryChainId,
-        });
-        return;
-      }
+      const registryAddress = requireHexOption(args, "--registry");
+      const registryChainId = parsePositiveBigInt(
+        requireOption(args, "--registry-chain-id"),
+        "--registry-chain-id",
+      );
+      const declaration = { registryAddress, registryChainId, codes };
+      printJson({
+        format: "schema-1",
+        suffix: encodeAttribution(declaration),
+        calldata: appendAttribution(calldata, declaration),
+        codes,
+        registryAddress,
+        registryChainId,
+      });
+      return;
+    }
+    case "encode-legacy": {
+      const calldata = requireHexOption(args, "--calldata");
+      const codes = requireOptions(args, "--code");
       printJson({
         format: "schema-0-legacy",
-        suffix: encodeAttribution(codes),
-        calldata: appendAttribution(calldata, codes),
+        suffix: encodeLegacyAttribution(codes),
+        calldata: appendLegacyAttribution(calldata, codes),
         codes,
       });
       return;
@@ -72,49 +75,46 @@ async function main(): Promise<void> {
       return;
     }
     case "resolve": {
+      const blockTag = optionalRpcQuantityOption(args, "--block-tag");
       const request = {
         rpcUrl: requireOption(args, "--rpc"),
         registryAddress: requireHexOption(args, "--registry"),
         code: requireOption(args, "--code"),
+        ...(blockTag === undefined ? {} : { blockTag }),
       };
-      const kind = optionalOption(args, "--kind") ?? "standard";
-      if (kind !== "standard" && kind !== "legacy") {
-        throw new Error("--kind must be standard or legacy");
-      }
-      printJson(
-        kind === "standard"
-          ? await resolveCodeRegistry(request)
-          : await resolveLegacyBuilder(request),
-      );
+      printJson(await resolveCodeRegistry(request));
+      return;
+    }
+    case "resolve-legacy": {
+      printJson(await resolveLegacyBuilder({
+        rpcUrl: requireOption(args, "--rpc"),
+        registryAddress: requireHexOption(args, "--registry"),
+        code: requireOption(args, "--code"),
+      }));
       return;
     }
     case "preflight": {
-      const registryAddress = optionalHexOption(args, "--registry");
-      const registryChainIdValue = optionalOption(args, "--registry-chain-id");
       const from = optionalHexOption(args, "--from");
       const value = optionalRpcQuantityOption(args, "--value");
       const blockTag = optionalRpcQuantityOption(args, "--block-tag");
       const fallbackPolicyValue = optionalOption(args, "--fallback-policy") ?? "revert-only";
-      if (
-        fallbackPolicyValue !== "revert-only"
-        && fallbackPolicyValue !== "any-error"
-        && fallbackPolicyValue !== "never"
-      ) {
-        throw new Error("--fallback-policy must be revert-only, any-error, or never");
+      if (fallbackPolicyValue !== "revert-only" && fallbackPolicyValue !== "never") {
+        throw new Error("--fallback-policy must be revert-only or never");
       }
       printJson(await prepareAttributedCall({
         rpcUrl: requireOption(args, "--rpc"),
         to: requireHexOption(args, "--to"),
         calldata: requireHexOption(args, "--calldata"),
         codes: requireOptions(args, "--code"),
+        registryAddress: requireHexOption(args, "--registry"),
+        registryChainId: parsePositiveBigInt(
+          requireOption(args, "--registry-chain-id"),
+          "--registry-chain-id",
+        ),
         fallbackPolicy: fallbackPolicyValue,
         ...(from === undefined ? {} : { from }),
         ...(value === undefined ? {} : { value }),
         ...(blockTag === undefined ? {} : { blockTag }),
-        ...(registryAddress === undefined ? {} : { registryAddress }),
-        ...(registryChainIdValue === undefined
-          ? {}
-          : { registryChainId: parsePositiveBigInt(registryChainIdValue, "--registry-chain-id") }),
       }));
       return;
     }
@@ -202,12 +202,13 @@ function printHelp(): void {
   console.log(`AVAX Impact attribution CLI
 
 Usage:
-  avax-impact encode --calldata 0x... --code avax-impact [--code partner]
   avax-impact encode --calldata 0x... --code avax-impact --registry 0x... --registry-chain-id 43113
+  avax-impact encode-legacy --calldata 0x... --code avax-impact
   avax-impact decode --calldata 0x...
   avax-impact decode-tx --rpc https://... --hash 0x... [--chain-id 43113] [--confirmed]
-  avax-impact resolve --rpc https://... --registry 0x... --code avax-impact [--kind standard|legacy]
-  avax-impact preflight --rpc https://... --to 0x... --calldata 0x... --code avax-impact [--from 0x...] [--value 0x0] [--block-tag 0x...] [--fallback-policy revert-only|any-error|never]
+  avax-impact resolve --rpc https://... --registry 0x... --code avax-impact [--block-tag 0x...]
+  avax-impact resolve-legacy --rpc https://... --registry 0x... --code avax-impact
+  avax-impact preflight --rpc https://... --to 0x... --calldata 0x... --code avax-impact --registry 0x... --registry-chain-id 43113 [--from 0x...] [--value 0x0] [--block-tag 0x...] [--fallback-policy revert-only|never]
   avax-impact validate --code avax-impact`);
 }
 

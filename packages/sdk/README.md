@@ -1,183 +1,154 @@
 # @avax-impact/sdk
 
-Transaction attribution helpers for Avalanche, evaluated against the ERC-8021 draft
-pinned at
+Transaction attribution helpers for Avalanche, evaluated against the ERC-8021 schema 1
+draft pinned at commit
 [`457532f5c064a4619868ee5e4950f0cc32a7917e`](https://github.com/ilikesymmetry/ERCs/blob/457532f5c064a4619868ee5e4950f0cc32a7917e/ERCS/erc-8021.md).
 
-ERC-8021 remains a draft. This package supports the pinned schema 1 format and the
-earlier AVAX Impact schema 0 prototype. `ATTRIBUTION_FORMAT_VERSION` and
-`LEGACY_FORMAT_VERSION` expose those exact identifiers.
+ERC-8021 is not finalized. `ATTRIBUTION_FORMAT_VERSION` exposes the exact revision this
+package implements.
 
 ## Install status
 
-The package is not published to npm during the MVP. From this repository:
-
-```bash
-npm install
-npm run build --workspace @avax-impact/sdk
-```
-
-Do not rely on `npm install @avax-impact/sdk` until a public package release is linked
-from this README.
+The package passes a clean packed-consumer test. npm publication is pending registry
+credentials; use the immutable GitHub release artifact or the repository workspace until
+the npm package is linked from this document.
 
 ## Encode and decode
 
-Pinned schema 1 embeds the registry address and chain ID:
+Schema 1 is the only format exposed by the default encoder:
 
 ```ts
 import {
-  appendAttributionV1,
+  appendAttribution,
   ATTRIBUTION_FORMAT_VERSION,
   decodeAttribution,
 } from "@avax-impact/sdk";
 
-const attributed = appendAttributionV1("0x1234", {
-  registryAddress: "0xcccccccccccccccccccccccccccccccccccccccc",
+const attributed = appendAttribution("0x1234", {
+  registryAddress: "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
   registryChainId: 43113n,
   codes: ["avax-impact"],
 });
-const decoded = decodeAttribution(attributed);
 
+const decoded = decodeAttribution(attributed);
 console.log(ATTRIBUTION_FORMAT_VERSION);
 console.log(decoded.schemaId); // 1
-console.log(decoded.originalCalldata); // "0x1234"
 console.log(decoded.registryChainId); // 43113n
 ```
 
-The legacy helpers `appendAttribution` and `encodeAttribution` produce schema 0. They
-remain available to decode and verify the historical Fuji prototype, not as a claim of
-canonical schema 0 registry interoperability.
+`appendAttributionV1` and `encodeAttributionV1` remain deprecated aliases for migrations.
+Registry-less schema 0 reproduction helpers are isolated under
+`@avax-impact/sdk/legacy` and are never chosen implicitly.
 
-Shared positive and malformed examples are exported as `CONFORMANCE_VECTORS`.
-Wire codes follow the pinned draft's nonempty 7-bit ASCII/no-comma/255-byte payload
-rules. Repetition and one-byte codes are valid at the wire layer. The stricter
-`validateBuilderCode` rules describe AVAX Impact's registry policy, not universal
-ERC-8021 parsing.
+## Pinned-block preflight
 
-## Dry-run compatibility
-
-Some contracts reject trailing calldata. The SDK resolves one block, executes the
-original and attributed calls with identical sender/value context, and compares their
-return data. The default policy falls back only when the original baseline succeeded
-and the attributed call produced a recognized execution revert. Transport, timeout,
-HTTP, malformed-response, original-call, and return-data-mismatch failures block handoff:
+`prepareAttributedCall` requires registry context, pins one block, runs the untouched and
+attributed calls with identical sender/value context, and compares return data:
 
 ```ts
 import { prepareAttributedCall } from "@avax-impact/sdk";
 
 const prepared = await prepareAttributedCall({
   rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc",
-  to: "0x0000000000000000000000000000000000000001",
-  from: "0x0000000000000000000000000000000000000002",
-  value: "0x0",
-  calldata: "0x1234",
+  to: "0xbDe66e5Ae9651C24173CC3DEFc5a4d5D7a186639",
+  calldata: "0x773acdef0000000000000000000000000000000000000000000000000000000000000029",
   codes: ["avax-impact"],
-  registryAddress: "0xcccccccccccccccccccccccccccccccccccccccc",
+  registryAddress: "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
   registryChainId: 43113n,
+  value: "0x0",
+  fallbackPolicy: "never",
 });
 
-if (prepared.status === "blocked") {
-  throw new Error(`preflight inconclusive: ${prepared.failureKind}`);
+if (prepared.status !== "attributed") {
+  throw new Error(`handoff blocked: ${prepared.failureKind}`);
 }
-sendTransaction({ to: "0x...", data: prepared.selectedCalldata });
+sendTransaction({ to: "0xbDe6...", data: prepared.selectedCalldata });
 ```
 
-When both registry fields are supplied, the helper prepares schema 1. Without them it
-prepares legacy schema 0. The result includes the pinned `blockTag` and both return-data
-values. Equality is point-in-time compatibility evidence, not proof of equal state
-effects or a promise that a later transaction will succeed. Set
-`fallbackPolicy` to `never` to block on every failure, or `any-error` only when the
-application intentionally owns that risk.
+Policies:
+
+- `revert-only` is the default and selects the already-tested original calldata only
+  after an attributed-only recognized execution revert;
+- `never` blocks on every attributed-call failure;
+- infrastructure, baseline, malformed-result, and return-data-mismatch failures always
+  return `status: "blocked"` with `selectedCalldata: null`.
+
+Equal return data is point-in-time evidence. It cannot prove equal writes, logs, gas, or
+future inclusion-state execution.
 
 ## Wallet batch handoff
 
-For wallets implementing ERC-5792 `wallet_sendCalls`, let the wallet append the suffix:
+For wallets implementing ERC-5792 `wallet_sendCalls`:
 
 ```ts
 import { createDataSuffixCapability } from "@avax-impact/sdk";
 
 const capabilities = createDataSuffixCapability({
   codes: ["avax-impact"],
-  registryAddress: "0xcccccccccccccccccccccccccccccccccccccccc",
+  registryAddress: "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
   registryChainId: 43113n,
-});
-
-await provider.request({
-  method: "wallet_sendCalls",
-  params: [{ version: "2.0.0", chainId: "0xa869", calls, capabilities }],
 });
 ```
 
-This is a capability handoff, not a claim that every wallet supports `dataSuffix` or
-that AVAX Impact directly decodes arbitrary ERC-4337 user operations.
+This lets the wallet append the suffix. It does not claim universal wallet support or
+direct ERC-4337 user-operation decoding.
 
-## Transaction fetch/decode and registry reads
+## Confirmed transactions and registry reads
 
 ```ts
 import { analyzeConfirmedTransaction, resolveCodeRegistry } from "@avax-impact/sdk";
 
 const analysis = await analyzeConfirmedTransaction({
   rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc",
-  transactionHash: "0x...",
+  transactionHash: "0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530",
   expectedChainId: 43113,
 });
 
 const resolution = await resolveCodeRegistry({
   rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc",
-  registryAddress: "0x...",
+  registryAddress: "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
   code: "avax-impact",
 });
 ```
 
-`analyzeConfirmedTransaction` rejects pending transactions, missing/inconsistent
-receipts, and failed execution. `analyzeTransaction` remains available for inspection
-of pending or reverted transactions and must not be used as proof of confirmation.
-
-`resolveCodeRegistry` reads the pinned `ICodeRegistry` ABI: `payoutAddress`, `codeURI`,
-`isValidCode`, and `isRegistered`. `resolveLegacyBuilder` exists only for the historical
-AVAX Impact Fuji registry and returns its extended owner/timestamp/lifecycle record.
-The deployed Fuji address in this repository is legacy and must not be passed off as a
-canonical or interoperable registry.
+`analyzeConfirmedTransaction` rejects pending transactions, failed execution, and
+missing or inconsistent receipts. `resolveCodeRegistry` reads the four ABI methods
+pinned by the draft: `payoutAddress`, `codeURI`, `isValidCode`, and `isRegistered`.
 
 ## CLI
 
 ```bash
 npm run build --workspace @avax-impact/sdk
-node packages/sdk/dist/src/cli.js encode --calldata 0x... --code avax-impact
-node packages/sdk/dist/src/cli.js encode --calldata 0x... --code avax-impact \
+
+avax-impact encode --calldata 0x... --code avax-impact \
   --registry 0x... --registry-chain-id 43113
-node packages/sdk/dist/src/cli.js decode --calldata 0x...
-node packages/sdk/dist/src/cli.js decode-tx --rpc https://... --hash 0x... --chain-id 43113 --confirmed
-node packages/sdk/dist/src/cli.js resolve --rpc https://... --registry 0x... \
-  --code avax-impact --kind standard
-node packages/sdk/dist/src/cli.js preflight --rpc https://... --to 0x... \
-  --calldata 0x... --code avax-impact --from 0x... --value 0x0 \
-  --registry 0x... --registry-chain-id 43113 --block-tag 0x... \
-  --fallback-policy revert-only
+avax-impact decode --calldata 0x...
+avax-impact decode-tx --rpc https://... --hash 0x... --chain-id 43113 --confirmed
+avax-impact resolve --rpc https://... --registry 0x... --code avax-impact
+avax-impact preflight --rpc https://... --to 0x... --calldata 0x... \
+  --code avax-impact --registry 0x... --registry-chain-id 43113 \
+  --fallback-policy never
 ```
 
-CLI `encode` emits schema 1 when `--registry` and `--registry-chain-id` are supplied
-together; without them it emits legacy schema 0. `resolve` defaults to the standard
-reader and accepts `--kind legacy` only for the historical AVAX Impact registry.
+Historical operations are explicit: `encode-legacy`, `resolve-legacy`, and the
+`@avax-impact/sdk/legacy` subpath.
 
 ## Verification
 
 ```bash
 npm run test:sdk
+npm run verify:package
+npm run verify:fuji:schema1
+npm run verify:compatibility
 ```
 
-Verified locally on 2026-08-28: 49 tests pass, covering schema 0/schema 1 codec rules,
-conformance vectors, pinned-block dual-call comparison and fallback, JSON-RPC
-validation, transaction fetch/decode, confirmed receipts, ERC-5792 capability handoff,
-the pinned registry ABI, the legacy registry resolver, and CLI workflows.
-
-The standard test command enforces minimum SDK coverage of 85% lines, 70% branches,
-and 95% functions across compiled source files.
+The test suite enforces at least 85% line, 70% branch, and 95% function coverage. The
+package test packs the exact artifact, installs it in a clean temporary consumer, and
+checks both the default and isolated legacy export paths.
 
 ## Trust model
 
-A decoded suffix proves only that the transaction declares builder codes and registry
-context. Codes are public and spoofable; neither schema nor registry ownership proves
-that the registered builder created or authorized a transaction. Do not use the result
-alone for authorization, payments, rewards, or grants. The package is unaudited and
-unpublished, and there are no documented third-party adopters yet.
+A decoded suffix proves only that a transaction declares codes and registry context.
+Codes are public and spoofable. Do not use attribution alone for authorization,
+payments, rewards, identity, or grant allocation. The contracts are unaudited, and
+external compatibility cases do not imply protocol endorsement or adoption.

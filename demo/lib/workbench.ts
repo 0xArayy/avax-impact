@@ -4,28 +4,33 @@ import {
   detectAttribution,
   encodeResolveCall,
   prepareAttributedCall,
-  resolveLegacyBuilder,
+  resolveCodeRegistry,
   type AttributionAnalysis,
   type AttributionResult,
+  type CodeRegistryResolution,
   type DryRunResult,
   type Hex,
-  type LegacyBuilderResolution,
   type RpcTransaction,
 } from "@avax-impact/sdk";
+import {
+  resolveLegacyBuilder,
+  type LegacyBuilderResolution,
+} from "@avax-impact/sdk/legacy";
 import { SAMPLE_STRICT_CALLDATA } from "@/lib/presentation.mjs";
 
 export const FUJI = {
   chainId: 43_113,
   rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc",
-  registryAddress: "0x8f13a300f2773EB6fa071B9196f6e16129F2549F" as Hex,
-  strictCalldataDemoAddress: "0x854595b7260f1325f643dd732F926c6B5da3bf8E" as Hex,
+  registryAddress: "0x96951d7e43812474Bb4AF211dcCAd13080D44653" as Hex,
+  historicalRegistryAddress: "0x8f13a300f2773EB6fa071B9196f6e16129F2549F" as Hex,
+  strictCalldataDemoAddress: "0x752495F1423edE0606329fCC7bFC0B18FE3DD005" as Hex,
   explorerUrl: "https://build.avax.network/explorer/fuji/c-chain",
 } as const;
 
 export const SAMPLE_TRANSACTION =
-  "0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821" as Hex;
+  "0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530" as Hex;
 export const SAMPLE_CALLDATA =
-  "0x773acdef0000000000000000000000000000000000000000000000000000000000000029617661782d696d706163740b0080218021802180218021802180218021" as Hex;
+  "0x773acdef000000000000000000000000000000000000000000000000000000000000002996951d7e43812474bb4af211dccad13080d44653a86902617661782d696d706163740b0180218021802180218021802180218021" as Hex;
 export const SAMPLE_PREFLIGHT_CALLDATA = encodeResolveCall("avax-impact");
 export { SAMPLE_STRICT_CALLDATA };
 
@@ -39,6 +44,12 @@ export interface InspectResult {
 export interface LegacyResolutionResult {
   readonly code: string;
   readonly resolution?: LegacyBuilderResolution;
+  readonly error?: string;
+}
+
+export interface FujiRegistryResolutionResult {
+  readonly code: string;
+  readonly resolution?: CodeRegistryResolution;
   readonly error?: string;
 }
 
@@ -78,7 +89,7 @@ export function inspectRawCalldata(calldata: Hex): InspectResult {
   return { source: "local-calldata", analysis };
 }
 
-export async function resolveLegacyCodes(
+export async function resolveHistoricalCodes(
   declaration: AttributionResult,
   signal?: AbortSignal,
 ): Promise<readonly LegacyResolutionResult[]> {
@@ -88,7 +99,35 @@ export async function resolveLegacyCodes(
       try {
         const resolution = await resolveLegacyBuilder({
           rpcUrl: FUJI.rpcUrl,
-          registryAddress: FUJI.registryAddress,
+          registryAddress: FUJI.historicalRegistryAddress,
+          code,
+          timeoutMs: 12_000,
+          signal,
+        });
+        return { code, resolution };
+      } catch (error) {
+        return { code, error: error instanceof Error ? error.message : String(error) };
+      }
+    }),
+  );
+}
+
+export async function resolveFujiRegistryCodes(
+  declaration: AttributionResult,
+  signal?: AbortSignal,
+): Promise<readonly FujiRegistryResolutionResult[]> {
+  if (
+    declaration.schemaId !== 1
+    || declaration.registryAddress === undefined
+    || declaration.registryChainId !== BigInt(FUJI.chainId)
+  ) return [];
+
+  return Promise.all(
+    declaration.codes.map(async (code) => {
+      try {
+        const resolution = await resolveCodeRegistry({
+          rpcUrl: FUJI.rpcUrl,
+          registryAddress: declaration.registryAddress as Hex,
           code,
           timeoutMs: 12_000,
           signal,
@@ -116,6 +155,8 @@ export function preflightFujiCall(input: PreflightInput): Promise<DryRunResult> 
     to: input.to,
     calldata: input.calldata,
     codes: input.codes,
+    registryAddress: FUJI.registryAddress,
+    registryChainId: BigInt(FUJI.chainId),
     from: input.from,
     value: input.value,
     timeoutMs: 12_000,

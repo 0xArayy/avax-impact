@@ -1,0 +1,83 @@
+{
+  "network": "Avalanche Fuji C-Chain",
+  "chainId": 43113,
+  "deployer": "0x345B2DEf6C2B14b656DbE57d2De05976E386a2b3",
+  "deployedAt": "2026-08-27T23:05:00Z",
+  "sourceCommit": "4f5318eff83f9bc6927cfd03157c44fc22669d49",
+  "sourceUrl": "https://github.com/0xArayy/avax-impact/commit/4f5318eff83f9bc6927cfd03157c44fc22669d49",
+  "sourceTag": "fuji-schema1-v0.1.0",
+  "sourceTagUrl": "https://github.com/0xArayy/avax-impact/tree/fuji-schema1-v0.1.0",
+  "sourceCommittedAt": "2026-08-27T23:02:44Z",
+  "compiler": {
+    "version": "0.8.24",
+    "optimizer": true,
+    "optimizerRuns": 200,
+    "evmVersion": "cancun"
+  },
+  "contracts": {
+    "builderRegistry": "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
+    "attributionDemo": "0xbDe66e5Ae9651C24173CC3DEFc5a4d5D7a186639",
+    "strictCalldataDemo": "0x752495F1423edE0606329fCC7bFC0B18FE3DD005"
+  },
+  "runtimeBytecode": {
+    "builderRegistry": {
+      "bytes": 6520,
+      "keccak256": "0x668fcf4bc40d9a6d1f72b7b6047d1adbc689e2950495cee427536eaef532890b"
+    },
+    "attributionDemo": {
+      "bytes": 264,
+      "keccak256": "0x8e3a4de75d1d2acaefb1c4c8fb6cc5df7e17fab62a495face409458bccdb35f3"
+    },
+    "strictCalldataDemo": {
+      "bytes": 229,
+      "keccak256": "0x8f0f579f8900376a2f2e3cc1a16ec2927e5e067d8836edb4f4a6b270d0795049"
+    }
+  },
+  "transactions": {
+    "deployments": [
+      {
+        "contract": "BuilderRegistry",
+        "blockNumber": 58023718,
+        "hash": "0x85f331bc87cef83768e888d0fa7656a0bb7473c5a87c5578c51ba1f65a1948c4"
+      },
+      {
+        "contract": "AttributionDemo",
+        "blockNumber": 58023721,
+        "hash": "0x2b5a5e096092afa9612c42fceaa4566299e039145192f4da795ab0359b994330"
+      },
+      {
+        "contract": "StrictCalldataDemo",
+        "blockNumber": 58023723,
+        "hash": "0x69c99c0cb80d06d86f3894ba0f023d79d47106435f06ae58984630f82d5ae05d"
+      }
+    ],
+    "builderRegistration": {
+      "blockNumber": 58023731,
+      "hash": "0x48c371d24618ba97f16ccfc49d7d6c46894e2e99e49a2900c86bdf36c8e38915"
+    },
+    "attributedPing": {
+      "blockNumber": 58023736,
+      "hash": "0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530"
+    }
+  },
+  "builder": {
+    "code": "avax-impact",
+    "owner": "0x345B2DEf6C2B14b656DbE57d2De05976E386a2b3",
+    "payoutAddress": "0x345B2DEf6C2B14b656DbE57d2De05976E386a2b3",
+    "codeURI": "https://github.com/0xArayy/avax-impact",
+    "active": true
+  },
+  "explorer": {
+    "builderRegistry": "https://build.avax.network/explorer/fuji/c-chain/address/0x96951d7e43812474Bb4AF211dcCAd13080D44653",
+    "attributionDemo": "https://build.avax.network/explorer/fuji/c-chain/address/0xbDe66e5Ae9651C24173CC3DEFc5a4d5D7a186639",
+    "strictCalldataDemo": "https://build.avax.network/explorer/fuji/c-chain/address/0x752495F1423edE0606329fCC7bFC0B18FE3DD005",
+    "attributedPing": "https://build.avax.network/explorer/fuji/c-chain/tx/0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530"
+  },
+  "verification": {
+    "verifiedAt": "2026-08-27T23:05:49Z",
+    "command": "npm run verify:fuji:schema1",
+    "method": "Immutable source tag, exact-source rebuild, runtime bytecode hashes, successful receipts, pinned ICodeRegistry reads, confirmed schema 1 decode, and strict-calldata negative-path checks",
+    "registryConformance": "Implements the ICodeRegistry read ABI pinned by ERC-8021 draft commit 457532f5c064a4619868ee5e4950f0cc32a7917e",
+    "attributionFormat": "Schema 1 from pinned ERC-8021 draft commit 457532f5c064a4619868ee5e4950f0cc32a7917e"
+  }
+}

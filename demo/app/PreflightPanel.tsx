@@ -150,14 +150,14 @@ function PreflightResult({ result }: { result: DryRunResult }) {
         <h3>{description.title}</h3>
         <p>{description.detail}</p>
       </div>
-      <HexField label="Attributed calldata" hint="schema 0 · legacy prototype" value={result.attributedCalldata} emphasize={result.success} />
+      <HexField label="Attributed calldata" hint="schema 1 · embedded Fuji registry" value={result.attributedCalldata} emphasize={result.success} />
       {result.selectedCalldata === null
         ? <div className="rpc-error"><strong>No calldata selected</strong><code>Resolve the {result.failureKind} failure before signing.</code></div>
         : <HexField label="Selected calldata" hint={result.success ? "attribution retained" : "explicit fallback policy applied"} value={result.selectedCalldata} emphasize={!result.success} />}
       {result.originalReturnData && result.attributedReturnData && result.originalReturnData !== result.attributedReturnData
         ? <><HexField label="Original return data" hint="comparison baseline" value={result.originalReturnData} /><HexField label="Attributed return data" hint="mismatch; handoff blocked" value={result.attributedReturnData} /></>
-        : result.returnData ? <HexField label="Matched return data" hint={`original = attributed at block ${result.blockTag}`} value={result.returnData} /> : null}
-      {result.error ? <div className="rpc-error"><strong>RPC / revert detail</strong><code>{result.error}</code></div> : null}
+        : result.success ? <HexField label="Matched return data" hint={`original = attributed at block ${result.blockTag}`} value={result.returnData} /> : null}
+      {!result.success ? <div className="rpc-error"><strong>RPC / revert detail</strong><code>{result.error}</code></div> : null}
       <div className="handoff-note"><span aria-hidden="true">↗</span><p><strong>{blocked ? "Do not sign yet." : "External handoff only."}</strong> {blocked ? "No payload was selected because the RPC result was inconclusive." : "Copy the selected calldata into a trusted signer. This workbench never requests keys or opens a wallet."}</p></div>
     </div>
   );

@@ -32,6 +32,10 @@ function preflightArgs(value: string): string[] {
     "0x1234",
     "--code",
     "avax-impact",
+    "--registry",
+    "0x2222222222222222222222222222222222222222",
+    "--registry-chain-id",
+    "43113",
     "--value",
     value,
   ];
@@ -41,7 +45,29 @@ test("CLI exposes the complete read-only and preflight workflow", () => {
   const output = execFileSync(process.execPath, [cli.pathname, "--help"], { encoding: "utf8" });
   assert.match(output, /decode-tx/);
   assert.match(output, /resolve/);
+  assert.match(output, /resolve .*--block-tag 0x/);
   assert.match(output, /preflight/);
+});
+
+test("CLI rejects malformed registry-resolution block tags before RPC", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      cli.pathname,
+      "resolve",
+      "--rpc",
+      "https://rpc.example.test",
+      "--registry",
+      "0x1111111111111111111111111111111111111111",
+      "--code",
+      "avax-impact",
+      "--block-tag",
+      "42",
+    ],
+    { encoding: "utf8" },
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /canonical non-negative JSON-RPC quantity/);
 });
 
 test("CLI emits JSON-safe schema-one output pinned to Avalanche registry context", () => {
@@ -67,7 +93,7 @@ test("CLI emits JSON-safe schema-one output pinned to Avalanche registry context
   assert.match(String(result.calldata), /0180218021802180218021802180218021$/);
 });
 
-test("CLI rejects partial schema-one context", () => {
+test("CLI rejects missing schema-one context", () => {
   const result = spawnSync(
     process.execPath,
     [
@@ -77,13 +103,22 @@ test("CLI rejects partial schema-one context", () => {
       "0x1234",
       "--code",
       "avax-impact",
-      "--registry",
-      "0x1111111111111111111111111111111111111111",
     ],
     { encoding: "utf8" },
   );
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /must be provided together/);
+  assert.match(result.stderr, /missing required option --registry/);
+});
+
+test("CLI makes historical schema-zero encoding explicit", () => {
+  const output = execFileSync(
+    process.execPath,
+    [cli.pathname, "encode-legacy", "--calldata", "0x1234", "--code", "avax-impact"],
+    { encoding: "utf8" },
+  );
+  const result = JSON.parse(output) as Record<string, unknown>;
+  assert.equal(result.format, "schema-0-legacy");
+  assert.match(String(result.calldata), /0080218021802180218021802180218021$/);
 });
 
 test("CLI preflight accepts canonical JSON-RPC quantities including zero", () => {

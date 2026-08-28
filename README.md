@@ -4,67 +4,75 @@
 
 [![CI](https://github.com/0xArayy/avax-impact/actions/workflows/ci.yml/badge.svg)](https://github.com/0xArayy/avax-impact/actions/workflows/ci.yml)
 
-Safety-first transaction attribution tooling for Avalanche C-Chain and EVM-based
-Avalanche L1s, evaluated against the ERC-8021 draft.
+Builder attribution infrastructure for Avalanche C-Chain and EVM-based Avalanche L1s.
 
-AVAX Impact appends a compact, public builder-code declaration to transaction calldata
-without changing the target function ABI. The SDK can compare original and attributed
-calls at one pinned block, apply an explicit fallback policy, verify confirmed
-transactions, and resolve a registry record.
+AVAX Impact appends a compact public builder declaration to transaction calldata. The
+SDK embeds an explicit registry address and chain ID, compares the untouched and
+attributed calls at one pinned block, and refuses transaction handoff when the result is
+inconclusive.
 
-[Open the live Fuji attribution workbench](https://avax-impact.0xarayy.workers.dev).
+[Open the live Fuji explorer and preflight](https://avax-impact.0xarayy.workers.dev).
+
+## Live schema 1 evidence
+
+Network: Avalanche Fuji C-Chain (`43113`). Builder code: `avax-impact`.
+
+| Evidence | Public reference |
+| --- | --- |
+| Pinned `ICodeRegistry` deployment | [`0x9695…4653`](https://build.avax.network/explorer/fuji/c-chain/address/0x96951d7e43812474Bb4AF211dcCAd13080D44653) |
+| Compatible calldata demo | [`0xbDe6…6639`](https://build.avax.network/explorer/fuji/c-chain/address/0xbDe66e5Ae9651C24173CC3DEFc5a4d5D7a186639) |
+| Strict-calldata negative control | [`0x7524…D005`](https://build.avax.network/explorer/fuji/c-chain/address/0x752495F1423edE0606329fCC7bFC0B18FE3DD005) |
+| Confirmed schema 1 transaction | [`0x2e82…3530`](https://build.avax.network/explorer/fuji/c-chain/tx/0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530) |
+| Versioned deployment manifest | [`deployments/fuji-schema1.json`](deployments/fuji-schema1.json) |
+| Immutable deployment source | [`fuji-schema1-v0.1.0`](https://github.com/0xArayy/avax-impact/tree/fuji-schema1-v0.1.0) |
+
+Reproduce the evidence from source and public RPC data:
+
+```bash
+npm ci
+npm run verify:fuji:schema1
+npm run verify:compatibility
+```
+
+The verifier rebuilds the tagged deployment source, compares live runtime bytecode,
+checks every receipt and registry read, decodes the confirmed schema 1 transaction, and
+exercises the strict rejection path. The compatibility corpus also runs live read-only
+cases against Aave V3, LFJ, Circle USDC, BENQI, and Chainlink on C-Chain.
 
 ## Standards status
 
-ERC-8021 is not a finalized ERC. This repository pins draft commit
+ERC-8021 is a draft, not a finalized ERC. This repository evaluates the schema 1 format
+from immutable upstream commit
 [`457532f5c064a4619868ee5e4950f0cc32a7917e`](https://github.com/ilikesymmetry/ERCs/blob/457532f5c064a4619868ee5e4950f0cc32a7917e/ERCS/erc-8021.md).
 
-- The current SDK encodes and decodes the pinned schema 1 format and retains the earlier
-  AVAX Impact schema 0 wire-format prototype.
-- The current local `BuilderRegistry` implements the pinned `ICodeRegistry` read ABI,
-  plus AVAX Impact lifecycle extensions.
-- The existing Fuji deployment predates those conformance changes. It is a schema 0
-  wire-format prototype backed by the legacy AVAX Impact registry ABI. It is not a
-  canonical or interoperable ERC-8021 registry deployment.
+The default SDK and CLI surface requires schema 1 registry context. Historical schema 0
+decoding and reproduction helpers are isolated under `@avax-impact/sdk/legacy`; they are
+not selected implicitly by any transaction-preparation API.
 
-This distinction is intentional: local conformance is testable now, while a new
-conformant schema 1 Fuji deployment remains grant work.
-
-## What is implemented
-
-- TypeScript schema 0 and pinned schema 1 encoder/decoder with shared conformance vectors.
-- JSON-RPC client, chain-checked transaction fetch/decode, pinned `ICodeRegistry` resolution,
-  and a separate legacy Fuji registry resolver.
-- Same-block original/attributed `eth_call` comparison with typed outcomes: matching
-  return data, baseline-verified fallback, or blocked handoff.
-- Successful-receipt transaction analysis and an ERC-5792 `dataSuffix` wallet helper.
-- Local Solidity registry conforming to the pinned resolver ABI, with owner-controlled
-  payout, metadata, two-step ownership transfer, and permanent deactivation extensions.
-- Compatible and deliberately incompatible calldata demo contracts.
-- Reproducible historical Fuji evidence and an automated read-only verifier.
-
-## How it works
+## Safety model
 
 ```text
-resolve one block → original eth_call
-                        |
-                  baseline succeeds
-                        |
-                 attributed eth_call
-              /             |             \
-   same return data     execution revert    mismatch/error
-          |                   |                  |
-attributed calldata   verified-original    handoff blocked
+pin one block → original eth_call succeeds
+                         |
+                  attributed eth_call
+                /          |           \
+       same return data   revert    mismatch / RPC error
+              |              |              |
+    attributed calldata  tested original   handoff blocked
                            fallback
 ```
 
-Attribution identifies the app, wallet, bot, or backend that the transaction publicly
-declares. It does not identify the protocol contract being called and does not prove
-that the registered builder created or authorized the transaction.
+The default `revert-only` policy permits fallback only after the original call succeeds
+and the attributed call produces a recognized execution revert. `never` disables all
+fallback. Transport, timeout, malformed-response, baseline, and return-data-mismatch
+failures expose no selected calldata.
+
+Matching `eth_call` return data is point-in-time compatibility evidence. It does not
+prove equal storage writes, events, gas, later execution, identity, or authorization.
 
 ## Quick start
 
-Requirements: Node.js 22.13+, npm, and Foundry (CI pins Forge 1.2.3).
+Requirements: Node.js 22.13+, npm, and Foundry. CI pins Forge 1.2.3.
 
 ```bash
 npm ci
@@ -72,123 +80,69 @@ npm --prefix demo ci
 npm run check
 ```
 
-The root workspace and web app intentionally use separate lockfiles; both install
-commands are required on a clean checkout. `npm run check` is the repository-wide
-build/test/lint/format/package-consumer gate. It currently runs 49 SDK tests, 20 Solidity
-tests, and 10 demo tests.
-
-Start the workbench locally after the gate passes:
-
-```bash
-npm --prefix demo run dev
-```
-
-Open the local URL printed by the development server.
-
-## SDK
-
-Legacy schema 0 prototype:
+Encode schema 1 attribution:
 
 ```ts
 import { appendAttribution, decodeAttribution } from "@avax-impact/sdk";
 
-const calldata = "0x1234";
-const attributed = appendAttribution(calldata, ["avax-impact"]);
-const decoded = decodeAttribution(attributed);
-```
-
-Pinned schema 1:
-
-```ts
-import { appendAttributionV1 } from "@avax-impact/sdk";
-
-const attributed = appendAttributionV1("0x1234", {
-  registryAddress: "0xcccccccccccccccccccccccccccccccccccccccc",
+const attributed = appendAttribution("0x1234", {
+  registryAddress: "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
   registryChainId: 43113n,
   codes: ["avax-impact"],
 });
+
+const declaration = decodeAttribution(attributed);
 ```
 
-See [the SDK documentation](packages/sdk/README.md) for transaction analysis, registry
-resolution, CLI commands, and the pinned-block preflight flow. The package is not yet
-published to npm; examples currently use the workspace build.
+Prepare a transaction safely:
 
-## Historical Fuji proof
+```ts
+import { prepareAttributedCall } from "@avax-impact/sdk";
 
-Network: Avalanche Fuji C-Chain (`43113`). Builder code: `avax-impact`.
+const prepared = await prepareAttributedCall({
+  rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc",
+  to: "0xbDe66e5Ae9651C24173CC3DEFc5a4d5D7a186639",
+  calldata: "0x773acdef0000000000000000000000000000000000000000000000000000000000000029",
+  codes: ["avax-impact"],
+  registryAddress: "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
+  registryChainId: 43113n,
+  fallbackPolicy: "never",
+});
 
-| Contract | Address |
-| --- | --- |
-| Legacy BuilderRegistry | [`0x8f13…549F`](https://build.avax.network/explorer/fuji/c-chain/address/0x8f13a300f2773EB6fa071B9196f6e16129F2549F) |
-| AttributionDemo | [`0x4e08…7200`](https://build.avax.network/explorer/fuji/c-chain/address/0x4e0803c679Fff7F3781856b41C2A810E76c47200) |
-| StrictCalldataDemo | [`0x8545…bf8E`](https://build.avax.network/explorer/fuji/c-chain/address/0x854595b7260f1325f643dd732F926c6B5da3bf8E) |
-
-Attributed schema 0 demo transaction:
-[`0x33c0…0821`](https://testnet.snowtrace.io/tx/0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821).
-
-The deployment source was restored at
-[`0c0665124ed8f1edc5372ed48c77a92a941d08be`](https://github.com/0xArayy/avax-impact/commit/0c0665124ed8f1edc5372ed48c77a92a941d08be)
-and preserved by the annotated tag
-[`fuji-schema0-v0.1.0`](https://github.com/0xArayy/avax-impact/tree/fuji-schema0-v0.1.0).
-The [deployment manifest](deployments/fuji.json) records compiler settings, runtime
-bytecode hashes, transactions, registry state, and verification timestamps.
-
-Run the read-only verifier:
-
-```bash
-npm run verify:fuji
+if (prepared.status !== "attributed") throw new Error("attribution handoff blocked");
 ```
 
-It rebuilds the restored source commit, compares live runtime bytecode, checks every
-recorded receipt, resolves the legacy registry record, and fetches and decodes the
-attributed transaction. It requires outbound access to the configured `FUJI_RPC_URL`
-(or the public default) and exits nonzero on a mismatch or unavailable RPC.
+See [the SDK guide](packages/sdk/README.md) for the CLI, confirmed transaction analysis,
+registry reads, and ERC-5792 wallet capability handoff.
 
-## Repository layout
+## Repository map
 
 ```text
 contracts/       Registry, demo contracts, Foundry tests, deployment scripts
-packages/sdk/    TypeScript library, CLI, and tests
-demo/            Public attribution inspection and preflight workbench
-scripts/         Fuji deployment, demo flow, and read-only verification
-deployments/     Public deployment manifests
-docs/            Format, operations, audit, validation, and grant material
+packages/sdk/    TypeScript SDK, CLI, legacy evidence subpath, and tests
+demo/            Static React explorer and preflight deployed to Cloudflare
+fixtures/        Conformance and live compatibility cases
+deployments/     Versioned public deployment manifests
+scripts/         Deployment, transaction, packaging, and read-only verification
+docs/            Grant, protocol, security, product, and operations evidence
 ```
 
-## Compatibility, security, and current limits
+The [documentation index](docs/README.md) separates grant material, protocol references,
+operations, and historical evidence.
 
-- Extra calldata works with standard Solidity ABI decoding but is not universally safe.
-  Contracts that inspect `msg.data.length` or use custom decoders may reject it.
-- `prepareAttributedCall` pins one block, requires the original call to succeed, and
-  compares original/attributed return data using identical `from`/`value` context. A
-  recognized attributed-only revert may select the already-tested original payload;
-  mismatches and inconclusive infrastructure failures block handoff. Equal return data
-  still cannot prove equal state effects or later inclusion-state execution.
-- Builder codes are public and spoofable. Never use attribution alone for
-  authorization, identity proof, payments, or grant allocation.
-- The contracts are unaudited, the SDK is unpublished, and no external adopters or
-  interviews are documented yet.
-- No conformant schema 1 / `ICodeRegistry` Fuji deployment exists yet. The listed Fuji
-  registry is the legacy prototype only.
+## Current limits
 
-## Documentation
+- Builder codes and suffixes are public and copyable. Never use them alone for access
+  control, payments, rewards, identity, or grant allocation.
+- Extra calldata is not universally compatible. Custom decoders and exact-length checks
+  can reject it; always preflight the exact call context.
+- External corpus results are engineering evidence, not adoption or partner claims.
+- Contracts are unaudited and no external adopters or interviews are documented yet.
+- The SDK is verified as a packed clean-consumer artifact. npm publication is pending
+  registry credentials; releases remain available as immutable GitHub artifacts.
 
-- [Attribution formats and trust model](docs/attribution-format.md)
-- [Fuji verification and deployment runbook](docs/fuji-runbook.md)
-- [Current acceptance matrix](docs/acceptance-matrix.md)
-- [Technical audit](docs/technical-audit.md)
-- [Grant project narrative](docs/grant-application.md)
-- [Market validation plan](docs/market-validation.md)
-- [Product direction](docs/product-direction.md)
-- [Design-partner pilot program](docs/pilot-program.md)
-- [Copy-paste Fuji pilot flow](docs/pilot-technical-flow.md)
-- [Pilot discovery and evidence field guide](docs/pilot-field-guide.md)
-- [Governance and sustainability](docs/governance.md)
-- [Release runbook](docs/release-runbook.md)
-- [Compatibility corpus and evidence boundary](docs/compatibility-corpus.md)
-- [ERC-8021 upstream/versioning risk](docs/upstream-risk.md)
-- [Signed-attribution design RFC](docs/signed-attribution-rfc.md)
-- [Public discovery and pilot tracker](docs/discovery-tracker.md)
+Historical schema 0 evidence remains reproducible in
+[its isolated evidence note](docs/legacy-schema0-evidence.md).
 
 ## License
 

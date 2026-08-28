@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveCodeRegistry, resolveLegacyBuilder } from "../src/index.js";
+import { resolveCodeRegistry } from "../src/index.js";
+import { resolveLegacyBuilder } from "../src/legacy.js";
 import type { Hex } from "../src/index.js";
 
 const registryAddress = "0x3333333333333333333333333333333333333333" as Hex;

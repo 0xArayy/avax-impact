@@ -26,9 +26,9 @@ export interface DryRunRequest {
   readonly to: Hex;
   readonly calldata: Hex;
   readonly codes: readonly string[];
-  /** When both registry fields are present, prepare schema 1. Otherwise legacy schema 0. */
-  readonly registryAddress?: Hex;
-  readonly registryChainId?: bigint;
+  /** Registry context embedded in the canonical schema 1 suffix. */
+  readonly registryAddress: Hex;
+  readonly registryChainId: bigint;
   readonly from?: Hex;
   readonly value?: Hex;
   /**
@@ -45,7 +45,7 @@ export interface DryRunRequest {
   readonly signal?: AbortSignal;
 }
 
-export type FallbackPolicy = "revert-only" | "any-error" | "never";
+export type FallbackPolicy = "revert-only" | "never";
 
 export type DryRunFailureKind =
   | RpcErrorKind
@@ -150,8 +150,8 @@ export interface ConfirmedTransactionAnalysis extends TransactionAnalysis {
 
 export interface DataSuffixCapabilityRequest {
   readonly codes: readonly string[];
-  readonly registryAddress?: Hex;
-  readonly registryChainId?: bigint;
+  readonly registryAddress: Hex;
+  readonly registryChainId: bigint;
   /** Whether a wallet may ignore the capability. Defaults to false. */
   readonly optional?: boolean;
 }

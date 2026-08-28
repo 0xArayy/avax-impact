@@ -4,15 +4,15 @@ import test from "node:test";
 import {
   analyzeConfirmedTransaction,
   analyzeTransaction,
-  appendAttribution,
   TransactionNotFoundError,
 } from "../src/index.js";
+import { appendLegacyAttribution } from "../src/legacy.js";
 import type { Hex } from "../src/index.js";
 
 const hash = `0x${"ab".repeat(32)}` as Hex;
 const baseTransaction = {
   hash,
-  input: appendAttribution("0x1234", ["avax-impact"]),
+  input: appendLegacyAttribution("0x1234", ["avax-impact"]),
   from: "0x1111111111111111111111111111111111111111",
   to: "0x2222222222222222222222222222222222222222",
   value: "0x0",

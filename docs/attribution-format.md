@@ -89,7 +89,7 @@ registries using the broader draft wire-code bounds.
 
 ## Registry resolver ABI
 
-The current local `BuilderRegistry` implements the read surface pinned by the draft:
+The deployed Fuji `BuilderRegistry` implements the read surface pinned by the draft:
 
 ```solidity
 function payoutAddress(string calldata code) external view returns (address);
@@ -102,14 +102,16 @@ function isRegistered(string calldata code) external view returns (bool);
 non-reverting. The payout and URI getters reject invalid, unknown, or inactive codes.
 The project-specific `resolve` extension returns the full lifecycle record.
 
-This is local ABI conformance, not a claim that Avalanche has selected this registry or
-address. The existing Fuji registry at `0x8f13…549F` predates this interface. The SDK
-therefore keeps two explicit readers:
+This is ABI conformance against one pinned draft revision, not a claim that Avalanche has
+selected this registry or address. The schema 1 Fuji registry is
+`0x9695…4653`; its versioned manifest and verifier are
+[`deployments/fuji-schema1.json`](../deployments/fuji-schema1.json) and
+`npm run verify:fuji:schema1`. The earlier address `0x8f13…549F` predates this interface.
+The SDK therefore keeps two explicit readers:
 
 - `resolveCodeRegistry` for the pinned `ICodeRegistry` ABI;
-- `resolveLegacyBuilder` for the historical AVAX Impact Fuji extension.
-
-No conformant schema 1 registry has yet been deployed on Fuji by this project.
+- `resolveLegacyBuilder`, available only from `@avax-impact/sdk/legacy`, for the
+  historical AVAX Impact Fuji extension.
 
 ## Decoder rules
 

@@ -55,6 +55,9 @@ jobs:
           version: v1.2.3
       - run: npm ci
       - name: Fetch deployment source commit
-        run: git fetch origin "$(jq -r .sourceCommit deployments/fuji.json)"
-      - run: npm run verify:fuji
+        run: |
+          git fetch origin "$(jq -r .sourceCommit deployments/fuji.json)"
+          git fetch origin "$(jq -r .sourceCommit deployments/fuji-schema1.json)"
+          git fetch --tags origin
+      - run: npm run verify:fuji:all
       - run: npm run verify:compatibility

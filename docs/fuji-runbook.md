@@ -3,7 +3,29 @@
 This runbook separates two different artifacts that must not be conflated:
 
 1. the historical schema 0 AVAX Impact prototype already deployed on Fuji; and
-2. a future schema 1 deployment using the pinned `ICodeRegistry` ABI.
+2. the current schema 1 deployment using the pinned `ICodeRegistry` ABI.
+
+## Verify the current schema 1 deployment
+
+```bash
+npm install
+npm run verify:fuji:schema1
+```
+
+The versioned manifest is
+[`deployments/fuji-schema1.json`](../deployments/fuji-schema1.json). The verifier rebuilds
+immutable source tag `fuji-schema1-v0.1.0`, checks live bytecode and receipts, resolves
+`avax-impact` through the pinned ABI, decodes the confirmed transaction, and exercises
+the strict schema 1 rejection path.
+
+| Contract | Address |
+| --- | --- |
+| Schema 1 `BuilderRegistry` | `0x96951d7e43812474Bb4AF211dcCAd13080D44653` |
+| `AttributionDemo` | `0xbDe66e5Ae9651C24173CC3DEFc5a4d5D7a186639` |
+| `StrictCalldataDemo` | `0x752495F1423edE0606329fCC7bFC0B18FE3DD005` |
+
+Confirmed schema 1 transaction:
+`0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530`.
 
 ## Verify the historical deployment
 
@@ -38,7 +60,7 @@ The historical result is deliberately narrow: it validates a schema 0 wire-forma
 prototype and AVAX Impact's legacy registry. It does not validate a canonical or
 interoperable ERC-8021 registry.
 
-## Current historical addresses
+## Historical addresses
 
 | Contract | Address |
 | --- | --- |
@@ -60,9 +82,8 @@ forge fmt --check
 bash -n scripts/*.sh
 ```
 
-The current local code differs from the historical deploy. It adds schema 1 support in
-the SDK and the pinned `ICodeRegistry` read ABI in `BuilderRegistry`. A successful local
-test does not upgrade the old Fuji address.
+The current code is the source for the schema 1 deployment above. Local checks remain a
+prerequisite for any future deployment, but do not alter either recorded generation.
 
 ## Prepare a dedicated Fuji account
 
@@ -80,7 +101,7 @@ Set `DEPLOYER_PRIVATE_KEY`, `PAYOUT_ADDRESS`, `METADATA_URI`, `BUILDER_CODE`, an
 `FUJI_RPC_URL`. The shell scripts refuse a chain ID other than `43113` unless
 `EXPECTED_CHAIN_ID` is explicitly changed for a local Anvil rehearsal.
 
-## Deploy the current conformant registry candidate
+## Deploy a future schema 1 revision
 
 ```bash
 ./scripts/deploy-fuji.sh
@@ -107,9 +128,9 @@ isRegistered(string)
 Also test invalid, unknown, and inactive-code behavior. A successful legacy `resolve`
 call alone is not sufficient evidence of `ICodeRegistry` conformance.
 
-## Produce a schema 1 Fuji proof
+## Produce a future schema 1 Fuji proof
 
-Use `appendAttributionV1` or `prepareAttributedCall` with both the new registry address
+Use `appendAttribution` or `prepareAttributedCall` with both the new registry address
 and `registryChainId: 43113n`. Provide the real sender and value during simulation. The
 confirmed transaction must decode to:
 
@@ -119,9 +140,9 @@ confirmed transaction must decode to:
 - expected builder codes;
 - unchanged original target calldata.
 
-The existing `scripts/send-attributed-ping.sh` currently emits legacy schema 0 through
-the CLI. It can reproduce the old prototype path but is not evidence for this schema 1
-milestone until it is upgraded or a separate schema 1 sender is added.
+`scripts/send-attributed-ping.sh` requires registry context, runs the pinned-block
+dual-call preflight with `fallbackPolicy: never`, and refuses to sign unless the schema 1
+payload produces matching return data.
 
 ## Record new deployment evidence
 
@@ -149,5 +170,5 @@ links are useful navigation, not a substitute for deterministic checks.
 - Builder codes remain public and spoofable even with schema 1.
 - Shell scripts pass a Fuji private key to Foundry/cast; prefer a keystore or hardware
   signer before any production operation.
-- No new conformant Fuji registry or schema 1 proof is claimed until its manifest and
-  verifier evidence are committed publicly.
+- A future deployment is not claimed until its own manifest, immutable source tag,
+  and verifier evidence are committed publicly.

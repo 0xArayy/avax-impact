@@ -1,4 +1,4 @@
-import { appendAttribution, appendAttributionV1 } from "./codec.js";
+import { appendAttribution } from "./codec.js";
 import { assertAddress, assertHex, assertRpcQuantity } from "./hex.js";
 import { JsonRpcClient, JsonRpcError } from "./rpc.js";
 import type {
@@ -16,21 +16,15 @@ export async function prepareAttributedCall(request: DryRunRequest): Promise<Dry
   if (request.from !== undefined) assertAddress(request.from, "from");
   if (request.value !== undefined) assertRpcQuantity(request.value, "value");
 
-  if ((request.registryAddress === undefined) !== (request.registryChainId === undefined)) {
-    throw new Error("registryAddress and registryChainId must be provided together");
-  }
   const fallbackPolicy = request.fallbackPolicy ?? "revert-only";
   assertFallbackPolicy(fallbackPolicy);
   if (request.blockTag !== undefined) assertRpcQuantity(request.blockTag, "blockTag");
 
-  const attributedCalldata =
-    request.registryAddress === undefined || request.registryChainId === undefined
-      ? appendAttribution(request.calldata, request.codes)
-      : appendAttributionV1(request.calldata, {
-          registryAddress: request.registryAddress,
-          registryChainId: request.registryChainId,
-          codes: request.codes,
-        });
+  const attributedCalldata = appendAttribution(request.calldata, {
+    registryAddress: request.registryAddress,
+    registryChainId: request.registryChainId,
+    codes: request.codes,
+  });
   const originalTransaction: Record<string, Hex> = {
     to: request.to,
     data: request.calldata,
@@ -125,8 +119,8 @@ function attributedFailureResult(
   failureKind: DryRunFailureKind,
   error: string,
 ): DryRunResult {
-  const mayFallback = fallbackPolicy === "any-error"
-    || (fallbackPolicy === "revert-only" && failureKind === "execution-reverted");
+  const mayFallback = fallbackPolicy === "revert-only"
+    && failureKind === "execution-reverted";
   if (!mayFallback) {
     return {
       success: false,
@@ -251,8 +245,8 @@ function classifyFailure(error: unknown): DryRunFailureKind {
 }
 
 function assertFallbackPolicy(value: string): asserts value is FallbackPolicy {
-  if (value !== "revert-only" && value !== "any-error" && value !== "never") {
-    throw new Error("fallbackPolicy must be revert-only, any-error, or never");
+  if (value !== "revert-only" && value !== "never") {
+    throw new Error("fallbackPolicy must be revert-only or never");
   }
 }
 

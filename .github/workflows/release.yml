@@ -33,11 +33,19 @@ jobs:
       - run: npm audit --audit-level=high
         working-directory: demo
       - run: npm run check
-      - run: npm run verify:fuji
-      - run: npm run verify:compatibility
+      - name: Verify immutable deployment sources offline
+        run: npm run verify:deployment-sources
       - run: mkdir release-artifacts
       - run: npm pack --workspace @avax-impact/sdk --pack-destination release-artifacts
       - name: Create immutable GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" release-artifacts/*.tgz --verify-tag --generate-notes
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            mkdir existing-release
+            asset_name="$(basename release-artifacts/*.tgz)"
+            gh release download "$GITHUB_REF_NAME" --pattern "$asset_name" --dir existing-release
+            cmp "release-artifacts/$asset_name" "existing-release/$asset_name"
+          else
+            gh release create "$GITHUB_REF_NAME" release-artifacts/*.tgz --verify-tag --generate-notes
+          fi

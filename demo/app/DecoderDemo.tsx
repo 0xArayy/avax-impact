@@ -13,7 +13,7 @@ export function DecoderDemo() {
         <a className="brand" href="#top" aria-label="AVAX Impact workbench home">
           <span className="brand-mark" aria-hidden="true">A</span>
           <span>AVAX Impact</span>
-          <small>Readiness Workbench</small>
+          <small>Builder Attribution SDK</small>
         </a>
         <nav aria-label="Primary navigation">
           <a href="#inspect">Inspect</a>
@@ -26,7 +26,7 @@ export function DecoderDemo() {
       <section className="hero shell" id="top">
         <div className="hero__status">
           <span className="live-dot" aria-hidden="true" />
-          <span>Fuji testnet workbench</span>
+          <span>Live Fuji explorer and preflight</span>
           <span className="hero__chain">C-Chain · 43113</span>
         </div>
         <h1>Know what the transaction <em>declares</em> before you trust it.</h1>
@@ -47,7 +47,7 @@ export function DecoderDemo() {
         <div className="shell trust-rail__grid">
           <div><span>Network scope</span><strong>Avalanche Fuji only</strong></div>
           <div><span>Decode source</span><strong>@avax-impact/sdk</strong></div>
-          <div><span>Schema 0 status</span><strong>Legacy wire prototype</strong></div>
+          <div><span>Default format</span><strong>Schema 1 · pinned ERC-8021 draft</strong></div>
           <div><span>Security meaning</span><strong>Metadata, never authorization</strong></div>
         </div>
       </section>
@@ -73,8 +73,8 @@ export function DecoderDemo() {
       </section>
 
       <footer className="shell">
-        <div><span className="brand-mark" aria-hidden="true">A</span><span>AVAX Impact · open attribution infrastructure</span></div>
-        <p>Fuji prototype · No wallet connection · No transaction submission</p>
+        <div><span className="brand-mark" aria-hidden="true">A</span><span className="footer-disclaimer">Independent open-source project · not an official Avalanche service</span></div>
+        <p>Live Fuji evidence · No wallet connection · No transaction submission</p>
         <a href={REPOSITORY_URL} target="_blank" rel="noreferrer">GitHub ↗</a>
       </footer>
     </main>

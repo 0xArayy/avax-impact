@@ -1,9 +1,9 @@
 # How to run an AVAX Impact Fuji pilot
 
-This guide takes an Avalanche design partner from a clean checkout to a verified legacy
-Fuji proof, both preflight outcomes, and a participant-owned transaction integration.
-The existing public proof uses schema 0. Schema 1 is local-only until a new conformant
-Fuji deployment is published.
+This guide takes an Avalanche design partner from a clean checkout to the verified
+schema 1 Fuji proof, both preflight outcomes, and a participant-owned transaction
+integration. Historical schema 0 reproduction is documented separately and is never
+selected by the default SDK or CLI path.
 
 ## Prerequisites
 
@@ -30,28 +30,29 @@ npm run check
 builds and tests the workbench, lints the web code, checks Solidity formatting, and
 validates the shell scripts.
 
-## 2. Verify the historical Fuji proof
+## 2. Verify all Fuji evidence
 
 ```bash
-npm run verify:fuji
+npm run verify:fuji:all
 ```
 
 Expected final line:
 
 ```text
-Fuji verification passed: source, bytecode, receipts, registry, attribution, and strict fallback agree.
+Fuji schema 1 verification passed: source, bytecode, receipts, registry, attribution, and strict negative path agree.
 ```
 
-This read-only command rebuilds source commit `0c0665124ed8f1edc5372ed48c77a92a941d08be`,
-compares live runtime bytecode, checks recorded receipts, resolves the legacy registry
-record, decodes the historical transaction, and exercises the strict negative path. It
-does not verify schema 1.
+This read-only command verifies both evidence generations. For the current path it
+resolves immutable tag `fuji-schema1-v0.1.0`, rebuilds its source, compares all three
+live runtime bytecodes, checks deployment and registration receipts, resolves the
+standard registry record, decodes the confirmed schema 1 transaction, and exercises
+the strict negative path. The historical schema 0 verifier remains a separate check.
 
 If the public RPC is unavailable, set `FUJI_RPC_URL` to another Fuji C-Chain RPC and
 repeat. An unavailable or mismatched RPC is a failed verification, not permission to
 rely on the manifest alone.
 
-## 3. Decode and resolve the public sample
+## 3. Decode and resolve the current public sample
 
 Build the SDK CLI:
 
@@ -59,12 +60,12 @@ Build the SDK CLI:
 npm run build --workspace @avax-impact/sdk
 ```
 
-Decode the confirmed schema 0 transaction with a chain-ID check:
+Decode the confirmed schema 1 transaction with a chain-ID check:
 
 ```bash
 node packages/sdk/dist/src/cli.js decode-tx \
   --rpc https://api.avax-test.network/ext/bc/C/rpc \
-  --hash 0x33c0fb7ee4f48276dd237d67c4f8186b2416d2a033a90068d12efed63c8f0821 \
+  --hash 0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530 \
   --chain-id 43113
 ```
 
@@ -72,23 +73,23 @@ Verify that the JSON reports:
 
 - `chainId: 43113`;
 - `attribution.status: "declared"`;
-- `declaration.schemaId: 0`;
+- `declaration.schemaId: 1`;
+- `declaration.registryAddress: "0x96951d7e43812474Bb4AF211dcCAd13080D44653"`;
+- `declaration.registryChainId: 43113`;
 - `declaration.codes: ["avax-impact"]`; and
 - original calldata ending in `29`, the encoded argument to `ping(41)`.
 
-Resolve the code through the explicitly legacy reader:
+Resolve the code through the standard registry reader:
 
 ```bash
 node packages/sdk/dist/src/cli.js resolve \
   --rpc https://api.avax-test.network/ext/bc/C/rpc \
-  --registry 0x8f13a300f2773EB6fa071B9196f6e16129F2549F \
-  --code avax-impact \
-  --kind legacy
+  --registry 0x96951d7e43812474Bb4AF211dcCAd13080D44653 \
+  --code avax-impact
 ```
 
-Expected status: `registered-active`. This lookup describes the old AVAX Impact
-extension record. It is not a pinned `ICodeRegistry` schema 1 resolution and does not
-authenticate the transaction producer.
+Expected status: `registered`. The record exposes owner-asserted public metadata and
+does not authenticate the transaction producer.
 
 The same flow is available without installation in the
 [public workbench](https://avax-impact.0xarayy.workers.dev).
@@ -107,15 +108,17 @@ ownership.
 
 ### Compatible target
 
-The calldata below reads `avax-impact` from the historical registry. Its standard ABI
-decoder accepts trailing bytes.
+The calldata below calls the current positive demo target, whose ABI decoder accepts
+trailing bytes.
 
 ```bash
 node packages/sdk/dist/src/cli.js preflight \
   --rpc https://api.avax-test.network/ext/bc/C/rpc \
-  --to 0x8f13a300f2773EB6fa071B9196f6e16129F2549F \
-  --calldata 0x461a44780000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b617661782d696d70616374000000000000000000000000000000000000000000 \
+  --to 0xbDe66e5Ae9651C24173CC3DEFc5a4d5D7a186639 \
+  --calldata 0x773acdef0000000000000000000000000000000000000000000000000000000000000029 \
   --code partner-1 \
+  --registry 0x96951d7e43812474Bb4AF211dcCAd13080D44653 \
+  --registry-chain-id 43113 \
   --value 0x0
 ```
 
@@ -134,9 +137,11 @@ suffix.
 ```bash
 node packages/sdk/dist/src/cli.js preflight \
   --rpc https://api.avax-test.network/ext/bc/C/rpc \
-  --to 0x854595b7260f1325f643dd732F926c6B5da3bf8E \
+  --to 0x752495F1423edE0606329fCC7bFC0B18FE3DD005 \
   --calldata 0x56a316bb0000000000000000000000000000000000000000000000000000000000000029 \
   --code partner-1 \
+  --registry 0x96951d7e43812474Bb4AF211dcCAd13080D44653 \
+  --registry-chain-id 43113 \
   --value 0x0
 ```
 
@@ -204,6 +209,8 @@ const prepared = await prepareAttributedCall({
   value: transactionValue,
   calldata: originalCalldata,
   codes: [pilotBuilderCode],
+  registryAddress: "0x96951d7e43812474Bb4AF211dcCAd13080D44653",
+  registryChainId: 43113n,
 });
 
 if (prepared.status === "blocked") {
@@ -226,12 +233,10 @@ await existingTrustedSigner.sendTransaction({
 });
 ```
 
-For this current Fuji pilot, omitting registry fields intentionally produces legacy
-schema 0. Do not add the historical registry as schema 1 context. When a new conformant
-Fuji registry is publicly verified, schema 1 will require its published address as
-`registryAddress` and `43113n` as `registryChainId`. Supplying only one registry field is
-rejected. Until the new address and manifest exist,
-schema 1 is a local conformance exercise and cannot count as a Fuji pilot transaction.
+The default path requires both registry fields and always produces schema 1. Omitting
+either field is a type error and a CLI validation error; it never falls back to schema
+0. The address above is recorded with source, receipts, and bytecode in
+[`deployments/fuji-schema1.json`](../deployments/fuji-schema1.json).
 
 ## 6. Confirm and independently decode a participant transaction
 

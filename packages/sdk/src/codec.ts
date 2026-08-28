@@ -6,7 +6,7 @@ const markerBytes = hexToBytes(ERC_8021_MARKER);
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder("utf-8", { fatal: true });
 
-export function encodeAttribution(codes: readonly string[]): Hex {
+export function encodeLegacyAttribution(codes: readonly string[]): Hex {
   assertWireCodes(codes);
   const encodedCodes = textEncoder.encode(codes.join(","));
   const suffix = concatBytes(
@@ -18,12 +18,14 @@ export function encodeAttribution(codes: readonly string[]): Hex {
   return bytesToHex(suffix);
 }
 
-export function appendAttribution(calldata: Hex, codes: readonly string[]): Hex {
+export function appendLegacyAttribution(calldata: Hex, codes: readonly string[]): Hex {
   assertHex(calldata, "calldata");
-  return bytesToHex(concatBytes(hexToBytes(calldata), hexToBytes(encodeAttribution(codes))));
+  return bytesToHex(
+    concatBytes(hexToBytes(calldata), hexToBytes(encodeLegacyAttribution(codes))),
+  );
 }
 
-export function encodeAttributionV1(attribution: Schema1Attribution): Hex {
+export function encodeAttribution(attribution: Schema1Attribution): Hex {
   assertAddress(attribution.registryAddress, "registryAddress");
   if (/^0x0{40}$/i.test(attribution.registryAddress)) {
     throw new Error("registryAddress must not be the zero address");
@@ -44,12 +46,18 @@ export function encodeAttributionV1(attribution: Schema1Attribution): Hex {
   );
 }
 
-export function appendAttributionV1(calldata: Hex, attribution: Schema1Attribution): Hex {
+export function appendAttribution(calldata: Hex, attribution: Schema1Attribution): Hex {
   assertHex(calldata, "calldata");
   return bytesToHex(
-    concatBytes(hexToBytes(calldata), hexToBytes(encodeAttributionV1(attribution))),
+    concatBytes(hexToBytes(calldata), hexToBytes(encodeAttribution(attribution))),
   );
 }
+
+/** @deprecated Use `encodeAttribution`; schema 1 is the canonical public format. */
+export const encodeAttributionV1 = encodeAttribution;
+
+/** @deprecated Use `appendAttribution`; schema 1 is the canonical public format. */
+export const appendAttributionV1 = appendAttribution;
 
 export function detectAttribution(calldata: Hex): boolean {
   assertHex(calldata, "calldata");
