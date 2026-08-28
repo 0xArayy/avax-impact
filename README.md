@@ -25,6 +25,7 @@ Network: Avalanche Fuji C-Chain (`43113`). Builder code: `avax-impact`.
 | Confirmed schema 1 transaction | [`0x2e82…3530`](https://build.avax.network/explorer/fuji/c-chain/tx/0x2e826a5bf4ff5c4058618d4a432ed925c86b79055cd03a0f4b7309f2faf03530) |
 | Versioned deployment manifest | [`deployments/fuji-schema1.json`](deployments/fuji-schema1.json) |
 | Immutable deployment source | [`fuji-schema1-v0.1.0`](https://github.com/0xArayy/avax-impact/tree/fuji-schema1-v0.1.0) |
+| Immutable SDK release | [`v0.1.1`](https://github.com/0xArayy/avax-impact/releases/tag/v0.1.1) |
 
 Reproduce the evidence from source and public RPC data:
 

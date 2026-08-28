@@ -11,6 +11,10 @@
 6. Publish to npm only after the release artifact is verified and npm publisher access
    is configured. Record the package URL and integrity in the release notes.
 
+Current distributable release: [`v0.1.1`](https://github.com/0xArayy/avax-impact/releases/tag/v0.1.1).
+The public `avax-impact-sdk-0.1.1.tgz` asset was downloaded after publication and matched
+SHA-256 `194be1b0469271060ca6ee02dae2495ab516161d3736c07c4718972a864d8af8`.
+
 The historical Fuji deployment source commit
 `0c0665124ed8f1edc5372ed48c77a92a941d08be` is preserved by the durable annotated tag
 `fuji-schema0-v0.1.0`. `npm run verify:fuji` fails if the local tag resolves elsewhere.
