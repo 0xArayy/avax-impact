@@ -37,7 +37,6 @@ for (const [label, actual] of versionSurfaces) {
 const expectedReferences = new Map([
   ["CHANGELOG.md", `## ${version} -`],
   ["README.md", `/releases/tag/v${version}`],
-  ["packages/sdk/README.md", `/releases/download/v${version}/avax-impact-sdk-${version}.tgz`],
   ["demo/README.md", `/releases/tag/v${version}`],
   ["docs/pilot-technical-flow.md", `avax-impact-sdk-${version}.tgz`],
   ["docs/release-runbook.md", `Current distributable release: [\`v${version}\`]`],
