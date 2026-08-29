@@ -17,9 +17,13 @@ test("builds a stable static Cloudflare application shell", async () => {
 
 test("keeps schema 1 as the visible default and isolates historical evidence", async () => {
   const source = await readFile(new URL("../app/DecoderDemo.tsx", import.meta.url), "utf8");
+  const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
   assert.match(source, /Default format/);
   assert.match(source, /Schema 1 · pinned ERC-8021 draft/);
   assert.match(source, /Independent open-source project · not an official Avalanche service/);
+  assert.match(source, /import demoPackage from "\.\.\/package\.json"/);
+  assert.match(source, /GitHub · v\{PROJECT_VERSION\} ↗/);
+  assert.equal(packageJson.version, "0.1.1");
   const inspectPanel = await readFile(new URL("../app/InspectPanel.tsx", import.meta.url), "utf8");
   assert.match(inspectPanel, /CurrentRegistryResolution/);
   assert.doesNotMatch(source, /Schema 0 status|Legacy wire prototype|Fuji prototype/);

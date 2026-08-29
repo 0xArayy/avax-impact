@@ -5,6 +5,8 @@ Avalanche Fuji.
 
 Production: [avax-impact.0xarayy.workers.dev](https://avax-impact.0xarayy.workers.dev)
 
+Current production UI and SDK release: [`v0.1.1`](https://github.com/0xArayy/avax-impact/releases/tag/v0.1.1).
+
 - **Inspect** reads a Fuji transaction or decodes raw calldata through the shared SDK.
   The default sample is a confirmed schema 1 transaction tied to the deployed Fuji
   registry.
