@@ -10,8 +10,11 @@ package implements.
 ## Install status
 
 The package passes a clean packed-consumer test. npm publication is pending registry
-credentials; use the immutable GitHub release artifact or the repository workspace until
-the npm package is linked from this document.
+credentials. The current immutable artifact is
+[`avax-impact-sdk-0.1.1.tgz`](https://github.com/0xArayy/avax-impact/releases/download/v0.1.1/avax-impact-sdk-0.1.1.tgz)
+from release [`v0.1.1`](https://github.com/0xArayy/avax-impact/releases/tag/v0.1.1),
+with SHA-256
+`194be1b0469271060ca6ee02dae2495ab516161d3736c07c4718972a864d8af8`.
 
 ## Encode and decode
 

@@ -159,41 +159,40 @@ inconclusive infrastructure failures, not evidence that the target is incompatib
 
 ## 5. Add preflight to the participant's transaction path
 
-The SDK is not published to npm. For the pilot, build a package tarball and keep it at a
-stable relative path inside the participant project. Run this block from the participant
-project root:
+The SDK is not published to npm. For the pilot, download the immutable `v0.1.1` GitHub
+release asset and keep it at a stable relative path inside the participant project. Run
+this block from the participant project root:
 
 ```bash
 mkdir -p vendor/avax-impact
-AVAX_IMPACT_SOURCE="$(mktemp -d)"
-git clone --depth 1 https://github.com/0xArayy/avax-impact.git "$AVAX_IMPACT_SOURCE"
-git -C "$AVAX_IMPACT_SOURCE" rev-parse HEAD
-npm --prefix "$AVAX_IMPACT_SOURCE" ci
-npm --prefix "$AVAX_IMPACT_SOURCE" run build --workspace @avax-impact/sdk
-npm pack "$AVAX_IMPACT_SOURCE/packages/sdk" --pack-destination ./vendor/avax-impact
-npm install ./vendor/avax-impact/avax-impact-sdk-0.1.0.tgz
+curl --fail --location \
+  https://github.com/0xArayy/avax-impact/releases/download/v0.1.1/avax-impact-sdk-0.1.1.tgz \
+  --output vendor/avax-impact/avax-impact-sdk-0.1.1.tgz
+printf '%s  %s\n' \
+  194be1b0469271060ca6ee02dae2495ab516161d3736c07c4718972a864d8af8 \
+  vendor/avax-impact/avax-impact-sdk-0.1.1.tgz | shasum -a 256 --check
+npm install ./vendor/avax-impact/avax-impact-sdk-0.1.1.tgz
 node --input-type=module --eval \
   'import("@avax-impact/sdk").then(({ prepareAttributedCall }) => console.log(typeof prepareAttributedCall))'
 ```
 
-The final command must print `function`. Record the full source commit printed by
-`git rev-parse` and the tarball checksum with:
+The checksum command must report `OK`, and the final command must print `function`. To
+record the tarball checksum again, run:
 
 ```bash
-shasum -a 256 vendor/avax-impact/avax-impact-sdk-0.1.0.tgz
+shasum -a 256 vendor/avax-impact/avax-impact-sdk-0.1.1.tgz
 ```
 
 `npm install` records
-`file:vendor/avax-impact/avax-impact-sdk-0.1.0.tgz` in the participant project's
+`file:vendor/avax-impact/avax-impact-sdk-0.1.1.tgz` in the participant project's
 manifest and lockfile. The dependency therefore does not point at a disposable temp
-directory. This is a pilot-only snapshot until an immutable npm release is linked from
-[`packages/sdk/README.md`](../packages/sdk/README.md).
+directory. This is an immutable GitHub release snapshot until an npm release is linked
+from [`packages/sdk/README.md`](../packages/sdk/README.md).
 
 The generated tarball does not need to be committed unless the participant explicitly
-chooses to vendor it. If it is not committed, the participant must preserve a repeatable
-build step using the recorded source commit; a lockfile that references an absent
-tarball cannot install on another machine or in CI. Do not publish the tarball as an
-official AVAX Impact release.
+chooses to vendor it. If it is not committed, the participant must preserve the pinned
+release URL and checksum download step; a lockfile that references an absent tarball
+cannot install on another machine or in CI. Do not republish the tarball.
 
 After installation, insert the check immediately after preparing original calldata and
 immediately before the existing signer call:

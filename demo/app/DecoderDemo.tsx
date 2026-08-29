@@ -1,8 +1,11 @@
 import { InspectPanel } from "./InspectPanel";
 import { PreflightPanel } from "./PreflightPanel";
 import { ProvenanceLabel } from "./WorkbenchBits";
+import demoPackage from "../package.json";
 
 const REPOSITORY_URL = "https://github.com/0xArayy/avax-impact";
+const PROJECT_VERSION = demoPackage.version;
+const RELEASE_URL = `${REPOSITORY_URL}/releases/tag/v${PROJECT_VERSION}`;
 
 export function DecoderDemo() {
   return (
@@ -75,7 +78,7 @@ export function DecoderDemo() {
       <footer className="shell">
         <div><span className="brand-mark" aria-hidden="true">A</span><span className="footer-disclaimer">Independent open-source project · not an official Avalanche service</span></div>
         <p>Live Fuji evidence · No wallet connection · No transaction submission</p>
-        <a href={REPOSITORY_URL} target="_blank" rel="noreferrer">GitHub ↗</a>
+        <a href={RELEASE_URL} target="_blank" rel="noreferrer">GitHub · v{PROJECT_VERSION} ↗</a>
       </footer>
     </main>
   );

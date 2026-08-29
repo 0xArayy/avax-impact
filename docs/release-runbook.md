@@ -35,6 +35,6 @@ probes run before tagging and in scheduled CI; public RPC availability is not al
 make artifact creation nondeterministic.
 
 The current schema 1 deployment is independently pinned by `fuji-schema1-v0.1.0` and
-verified with `npm run verify:fuji:schema1`. Semantic release tags such as `v0.1.0`
+verified with `npm run verify:fuji:schema1`. Semantic release tags such as `v0.1.1`
 identify distributable repository releases; deployment tags identify exact onchain
 source. Neither tag type is moved after publication.
